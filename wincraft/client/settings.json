@@ -1,0 +1,10 @@
+{
+  "windows": {
+  	"Test": {"opened": false, "lockable": false, "control": ""},
+  	"Generic": {"opened": false, "lockable": false, "control": ""},
+  	"Orders": {"opened": false, "lockable": false, "control": ""},
+  	"OrdersModif": {"opened": false, "lockable": true, "control": ""},
+  	"AliasesModif": {"opened": false, "lockable": false, "control": ""},
+  },
+  "port": 1002
+}

@@ -1,0 +1,1 @@
+{"light0":{"id":1,"repeat":"0","orders":[{"force":"255","block":"3d7320a4-4113-4e35-a80d-3eb8be1ce2e2","id":0,"color":0,"type":"output","side":2},{"time":"10","id":1,"type":"wait"},{"force":"0","block":"3d7320a4-4113-4e35-a80d-3eb8be1ce2e2","id":2,"color":0,"type":"cleanOut","side":2}],"offOn":false}}
