@@ -106,6 +106,10 @@ local gOrders = function(eventType,dest,src,aport)
 	mo.send(src, port, "GOrders", serialization.serialize(dataOrders))
 end
 
+local gServerAliases = function(_, _, src)
+	mo.send(src, port, "GAliases", serialization.serialize(dataAliases))
+end
+
 local gServerRefresh = function(_, _, src)
 	mo.send(src, port, "GRefresh", serialization.serialize(data))
 end
@@ -279,6 +283,7 @@ WCServer.start = function(aport)
 	print("Server port: "..port.." opened: "..(mo.isOpen(port) and 'true' or 'false').." -- press 't' to exit")
 	local block, side, origValue, newValue, color
 	local orders = {}
+	orders["GAliases"] = gServerAliases
 	orders["GServerAddress"] = gServerAddress
 	orders["GRefresh"] = gServerRefresh
 	orders["GSignal"] = gSignal

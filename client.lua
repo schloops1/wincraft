@@ -14,8 +14,13 @@ local function prequire(m)
   if not ok then return nil, err end
   return err
 end
-local mod = prequire("WCClient")
-os.exit()
 
---local client = require "client"
---client.start(1002)
+
+local safe = false
+if safe == true then
+	local mod = prequire("WCClient")
+	os.exit()
+else
+	local client = require "WCClient"
+	client.start()
+end

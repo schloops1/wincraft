@@ -11,6 +11,7 @@ local modem
 local srvAddress
 WCClient.data = {}
 WCClient.dataOrders = {}
+WCClient.dataAliases = {}
 local listenData = {}
 listenData.windows = {}
 listenData.orders = {}
@@ -343,6 +344,19 @@ local getServerDataOrders = function()
 	end
 end
 
+local getServerAliases = function()
+	serialization = require "serialization"
+	modem.send(srvAddress, port, "GAliases")
+	while true do
+		a1, a2, a3, a4, a5, order, srvData, a8, a9 = event.pull("modem_message")
+		if order == "GAliases" then 
+			WCClient.dataAliases = serialization.unserialize(srvData)
+			d.p(d.dmp(WCClient.dataAliases))
+			break
+		end
+	end
+end
+
 local getServerData = function()
 	serialization = require "serialization"
 	modem.send(srvAddress, port, "GRefresh")
@@ -385,6 +399,8 @@ local start = function()
 	d.p("* Server data received")
 	getServerDataOrders()
 	d.p("* Server dataOrders received")
+	getServerAliases()
+	d.p("* Server aliases received")
 	getWindowsLocked()
 	d.p("* Server dataWindowsLocked received")
 	mainLoop()

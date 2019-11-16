@@ -1,8 +1,17 @@
 {
-"TOP": {"type": "N", "aliases": {"LIGHT": {"type": "N", "aliases": {"LIGHT1": {"type": "L", "block": "MAIN", "side": "2", "color": "3"},
-			     			       		    "LIGHT2": {"type": "L", "block": "MAIN", "side": "2", "color": "4"}
-			     		 	      		   }
-			     		  }
-		   		}
-       }
+  "Top": 
+  { 
+    "node": true,
+    "aliases": 
+    {
+      "light1": 
+      {
+	"node": false,
+  	"block": "3d7320a4-4113-4e35-a80d-3eb8be1ce2e2",
+  	"side": 2,
+  	"color": 0
+      }
+    }
+  }
+
 }
