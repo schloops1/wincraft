@@ -5,6 +5,7 @@ if not string.find(package.path, "/home/wincraft/lib") then
 	if not string.find(package.path, "/home/wincraft/client") then
 		package.path = package.path..";/home/wincraft/client/?.lua"
 		package.path = package.path..";/home/wincraft/client/applications/?.lua"
+		package.path = package.path..";/home/wincraft/client/applications/custom/?.lua"
 	end
 end
 --print(package.path)

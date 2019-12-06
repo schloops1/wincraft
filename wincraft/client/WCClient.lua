@@ -5,10 +5,15 @@ local thread = require "thread"
 local event = require "event"
 local bit32 = require "bit32"
 local buffer = require("doubleBuffering")
+package.loaded.AliasNode = nil
+local aliasNode = require "AliasNode"
+
+local json = require "json"
 
 WCClient.application = nil
 local modem
 local srvAddress
+local menu
 WCClient.data = {}
 WCClient.dataOrders = {}
 WCClient.dataAliases = {}
@@ -17,109 +22,131 @@ listenData.windows = {}
 listenData.orders = {}
 listenData.orders.windows = {}
 listenData.ordersWindows = {}
+listenData.aliasesWindows = {}
+listenData.alias = {}
+listenData.alias.windows = {}
 
 WCClient.dataWindowsLocked = {}
 local settings = {}
+local customApplis
 
 local port
 local settingFile = "settings.json"
 
 package.loaded.dump = nil
 local d = require "dump"
-d.newLog()
+--d.newLog()
+
+local loadJsonData = function(fileName, json)
+	local f = io.open(fileName, "r")
+	local data = json.decode(f:read("*all"))
+	f:close()
+	return data
+end
 
 WCClient.lockWindow = function(windowName, offOn)
 	modem.send(srvAddress, port, "LWindow", windowName, offOn)
+	d.p("lockWindow "..windowName.." "..tostring(offOn).." sent")
+end
+
+WCClient.offOnAlias = function(selectedName, charge)
+	modem.send(srvAddress, port, "EAlias", selectedName, charge)
+	d.p("offOnAlias "..selectedName.. " "..charge.." sent")
+end
+
+WCClient.upDownAlias = function(parentAliasName, index, upDown)
+	modem.send(srvAddress, port, "UDAlias", parentAliasName, index, upDown)
+	d.p("upDownAlias "..parentAliasName.. " "..index.." "..tostring(upDown).." sent")
+end
+
+WCClient.updateAlias = function(oldAliasName, newAliasName, alias)
+	modem.send(srvAddress, port, "UAlias", oldAliasName, newAliasName, json.encode(alias))
+	d.p("updateAlias "..oldAliasName.. " "..newAliasName.." sent")
+end
+
+WCClient.deleteAlias = function(aliasName)
+	modem.send(srvAddress, port, "DAlias", aliasName)
+	d.p("deleteAlias "..aliasName.." sent")
+end
+
+WCClient.insertAlias = function(aliasParentName, aliasName, alias)
+	modem.send(srvAddress, port, "IAlias", aliasParentName, aliasName, json.encode(alias))
+	d.p("insertAlias "..aliasParentName.. " "..aliasName.." sent")
 end
 
 WCClient.updateOrder = function(oldOrderName, newOrderName, order)
-	local json = require "json"
 	modem.send(srvAddress, port, "UOrder", oldOrderName, newOrderName, json.encode(order))
-	package.loaded.json = nil
+	d.p("updateOrder "..oldOrderName.. " "..newOrderName.." sent")
 end
 
 WCClient.deleteOrder = function(orderName)
 	modem.send(srvAddress, port, "DOrder", orderName)
+	d.p("deleteOrder "..orderName.." sent")
 end
 
 WCClient.insertOrder = function(orderName, order)
-	local json = require "json"
 	modem.send(srvAddress, port, "IOrder", orderName, json.encode(order))
-	package.loaded.json = nil
+	d.p("insertOrder "..orderName.." sent")
 end
 
-swithValue = function(block, side, color)
-	modem.send(srvAddress, port, "TSignal", block, side, color)
+stopListeningToAliasesList = function(windowName)
+	listenData.aliasesWindows[windowName] = nil
+	d.p("stopListeningToAliasesList "..windowName.." done")
 end
 
-applyChanges = function(block, side, origValue, newValue, color)
-	d.p("entering apply changes")
-	local offOn; local charge
-	d.p("value of original data: "..WCClient.data[block][side])
-	if newValue == 0 then 
-		offOn = false
-		WCClient.data[block][side] = bit32.band(WCClient.data[block][side], 65535 - 2^color)
-	else 
-		offOn = true
-		WCClient.data[block][side] = bit32.bor(WCClient.data[block][side], 2^color)
+applyChangesAliasesList = function()
+	for k, v in pairs (listenData.aliasesWindows) do
+		listenData.aliasesWindows[k].switch.refresh()
 	end
-	d.p("value of new data: "..WCClient.data[block][side])
-	for k, v in pairs (listenData.windows) do
-		d.p("inside applyChanges loop")
-		if listenData.windows[k][block] ~= nil and listenData.windows[k][block][tostring(side)] ~= nil 
-				and listenData.windows[k][block][tostring(side)][tostring(color)] ~= nil then
-			d.p("record found"); d.p("tostring(side) "..tostring(side)); d.p("tostring(color) "..tostring(color)); d.p("offOn: "..tostring(offOn))
-			--check type for different control types
-			listenData.windows[k][block][tostring(side)][d.okv(color)].switch:setState(offOn)
-			WCClient.application:draw()
-			d.p("end loop")
-		end
-	end
+	d.p("applyChangesAliasesList done")
+end
+
+WCClient.listenToAliasesList = function(control, windowName)
+	listenData.aliasesWindows[windowName] = control
+	d.p("listenToAliasesList "..windowName.." done")
+	return control
 end
 
 stopListeningToOrdersList = function(windowName)
 	listenData.ordersWindows[windowName] = nil
+	d.p("stopListeningToOrdersList "..windowName.." done")
 end
 
 applyChangesOrdersList = function()
 	for k, v in pairs (listenData.ordersWindows) do
 		listenData.ordersWindows[k].switch.refresh()
 	end
+	d.p("applyChangesOrdersList done")
 end
 
 listenToOrdersList = function(control, windowName)
 	listenData.ordersWindows[windowName] = control
+	d.p("listenToOrdersList "..windowName.." done")
 	return control
 end
 
-listenToWire = function(control, windowsName, block, side, color)
-	d.p("listen to wire params: "..windowsName.." "..block.." "..side.." "..color)
-	if listenData.windows[windowsName] == nil then listenData.windows[windowsName] = {}; end
-	if listenData.windows[windowsName][block] == nil then listenData.windows[windowsName][block] = {}; end
-	if listenData.windows[windowsName][block][tostring(side)] == nil then listenData.windows[windowsName][block][tostring(side)] = {}; end
-	d.p("ready to insert listen data")
-	listenData.windows[windowsName][block][tostring(side)][d.okv(color)] = control
-	d.p("control set")
-	return control
-end
 
 WCClient.stopListeningToWindowWires = function(windowsName)
 	listenData.windows[windowsName] = nil
+	d.p("stopListeningToWindowWires "..windowsName.." done")
 end
 
 stopListeningToWire = function(windowsName, block, side, color)
-	--not tested
-	listenData.windows[windowsName][block][tostring(side)][tostring(color)] = nil
+	--not tested -- need removing tostring probably
+	listenData.windows[windowsName][block][side][color] = nil
+	d.p("stopListeningToWire "..windowsName.." "..block.." "..side.." "..color.." done")
 end
 
 WCClient.stopListeningToWindowOrders = function(windowName)
 	listenData.orders.windows[windowName] = nil
+	d.p("stopListeningToWindowOrders "..windowName.." done")
 end
 
 WCClient.closeWindow = function(name)
 	settings.windows[name].control:close()
 	WCClient.stopListeningToWindowWires(name)
 	WCClient.stopListeningToWindowOrders(name)
+	stopListeningToAliasesList(name)
 	stopListeningToOrdersList(name)
 	settings.windows[name].control = nil
 	settings.windows[name].opened = false
@@ -128,13 +155,14 @@ WCClient.closeWindow = function(name)
 		WCClient.lockWindow(name, false)
 	end
 	WCClient.application:draw()
+	d.p("window closed: "..name)
 end
 
 openWindow = function(name)
     if settings.windows[name].opened == true then return 0 end
     if WCClient.dataWindowsLocked[name] ~= nil 
     	and WCClient.dataWindowsLocked[name] == true then 
-    		--WCClient.GUI.alert("Window "..name.." is locked")
+		d.p("window is locked: "..name)
 	else    
 		package.loaded[name] = nil
 		local win = require(name)
@@ -147,12 +175,13 @@ openWindow = function(name)
 		WCClient.application:draw()
 		return 1
     end    
+    d.p("window opened: "..name)
 end
 
 getOffOn = function(block, side, color)
-	local charge = bit32.band(WCClient.data[block][tostring(side)], 2^color)
+	local charge = bit32.band(WCClient.data[block][side], 2^color)
     local offOn = (charge > 0)
-    return bit32.band(WCClient.data[block][tostring(side)], 2^color) > 0
+    return bit32.band(WCClient.data[block][side], 2^color) > 0
 end
 
 WCClient.scrollFromTo = function(percent, amountOrders, scrollSize, layout, displayLine)
@@ -190,11 +219,13 @@ WCClient.scrollFromTo = function(percent, amountOrders, scrollSize, layout, disp
 	end
 end
 
+-- ************************************************************************************************************************
+
 WCClient.addSyncRectangle = function(block, side, color, name)
-	local offOn = not getOffOn(block, side, color)
+	local offOn = getOffOn(block, side, color)
 	local object = WCClient.GUI.object(2, 2, 1, 1)
 	object.switch = {}
-	object.switch.setState = function(self, state) offOn = state end
+	object.switch.setState = function(self, state) offOn = state; end
 	object.draw = function(object)
 		if offOn == true then
 			buffer.drawRectangle(object.x, object.y, object.width, object.height, 0x33FF80, 0x0, " ")
@@ -206,7 +237,8 @@ WCClient.addSyncRectangle = function(block, side, color, name)
 	return object
 end
 
---here needs modification
+-- ************************************************************************************************************************
+
 applyChangesOrderAction = function(orderName, action, offOn)
 	for k, v in pairs (listenData.orders.windows) do
 		if listenData.orders.windows[k][orderName] ~= nil and listenData.orders.windows[k][orderName][action] ~= nil then
@@ -219,6 +251,7 @@ end
 switchValueOrder = function(aOrderName, action, offOn)
 	if action == "offOn" then
 		modem.send(srvAddress, port, "EOrder", aOrderName, action, offOn)
+		d.p("switchValueOrder "..aOrderName.." "..action..tostring(offOn).." sent")
 	end
 end
 
@@ -226,7 +259,17 @@ listenToOrder = function(control, windowName, orderName, action)
 	if listenData.orders.windows[windowName] == nil then listenData.orders.windows[windowName] = {}; end
 	if listenData.orders.windows[windowName][orderName] == nil then listenData.orders.windows[windowName][orderName] = {}; end
 	if listenData.orders.windows[windowName][orderName][action] == nil then listenData.orders.windows[windowName][orderName][action] = control; end
+	d.p("listenToOrder "..windowName.." "..orderName.." "..action)
 	return control
+end
+
+WCClient.addSyncSwitchOrderNoLabel = function(windowName, action, aOrderName)
+	local offOn = WCClient.dataOrders[aOrderName][action]
+    local switch = WCClient.GUI.switch(1, 1, 10, 0x66DB80, 0x1D1D1D, 0xEEEEEE, offOn)
+    switch.onStateChanged = function() switchValueOrder(aOrderName, action, switch.state); switch.onStateChanged2() end
+	switch.onStateChanged2 = function() end
+	listenToOrder(switch, windowName, aOrderName, action)
+	return switch
 end
 
 WCClient.addSyncSwitchOrder = function(windowName, action, aOrderName, text)
@@ -238,6 +281,56 @@ WCClient.addSyncSwitchOrder = function(windowName, action, aOrderName, text)
 	return switchAndLabel
 end	
 
+-- ************************************************************************************************************************
+
+applyChanges = function(block, side, origValue, newValue, color)
+	d.p("entering apply changes")
+	local offOn; local charge
+	d.p("value of original block data: "..WCClient.data[block][side])
+	if newValue == 0 then 
+		offOn = false
+		WCClient.data[block][side] = bit32.band(WCClient.data[block][side], 65535 - 2^color)
+	else 
+		offOn = true
+		WCClient.data[block][side] = bit32.bor(WCClient.data[block][side], 2^color)
+	end
+	d.p("value of new block data: "..WCClient.data[block][side])
+	for k, v in pairs (listenData.windows) do
+		d.p("inside applyChanges loop")
+		if listenData.windows[k][block] ~= nil and listenData.windows[k][block][side] ~= nil 
+				and listenData.windows[k][block][side][color] ~= nil then
+			d.p("record found tostring(side) "..tostring(side).." tostring(color) "..tostring(color).." offOn: "..tostring(offOn))
+			--check type for different control types
+			listenData.windows[k][block][side][color].switch:setState(offOn)
+			WCClient.application:draw()
+			--d.p("end loop")
+		end
+	end
+end
+
+swithValue = function(block, side, color)
+	modem.send(srvAddress, port, "TSignal", block, side, color)
+end
+
+listenToWire = function(control, windowsName, block, side, color)
+	d.p("listen to wire params: "..windowsName.." "..block.." "..side.." "..color)
+	if listenData.windows[windowsName] == nil then listenData.windows[windowsName] = {}; end
+	if listenData.windows[windowsName][block] == nil then listenData.windows[windowsName][block] = {}; end
+	if listenData.windows[windowsName][block][side] == nil then listenData.windows[windowsName][block][side] = {}; end	
+	listenData.windows[windowsName][block][side][color] = control
+	return control
+end
+
+WCClient.addSyncSwitchNoLabel = function(block, side, color, name)
+	local offOn = getOffOn(block, side, color)
+    local switch = WCClient.GUI.switch(1, 1, 10, 0x66DB80, 0x1D1D1D, 0xEEEEEE, offOn)--0x999999, 
+    --local switch = WCClient.GUI.switch(1, 1, 10, 0x2B6FAB, 0x1D1D1D, 0xEEEEEE, offOn)
+     --local switch = WCClient.GUI.switch(1, 1, 10, 0x663380, 0x15151D, 0x22EE22, offOn)--0x999999, 
+    switch.onStateChanged = function() swithValue(block, side, color) end
+	listenToWire(switch, name, block, side, color)
+	return switch
+end
+
 WCClient.addSyncSwitch = function(block, side, color, text, name)
 	local offOn = getOffOn(block, side, color)
     local switchAndLabel = WCClient.GUI.switchAndLabel(2, 2, 25, 8, 0x66DB80, 0x1D1D1D, 0xEEEEEE, 0x999999, text, offOn)
@@ -245,6 +338,43 @@ WCClient.addSyncSwitch = function(block, side, color, text, name)
 	listenToWire(switchAndLabel, name, block, side, color)
 	return switchAndLabel
 end	
+
+-- ************************************************************************************************************************
+
+WCClient.insertCustomMenu = function(name)
+	settings.windows[name] = {};settings.windows[name].opened = false; settings.windows[name].lockable = false; settings.windows[name].control = ""
+	customApplis = loadJsonData("/home/wincraft/client/applications/dataApplis.json", json)
+	table.remove(menu.children, 4)
+	local contextMenu3 = menu:addContextMenu("Custom")
+	for k, v in pairs (customApplis) do	
+		contextMenu3:addItem(v.name).onTouch = function() openWindow(v.name) end
+	end
+	customApplis = nil
+end
+
+WCClient.updateCustomMenu = function(oldName, newName)
+	if oldName == newName then return end
+	customApplis = loadJsonData("/home/wincraft/client/applications/dataApplis.json", json)
+	settings.windows[oldName] = nil
+	settings.windows[newName] = {};settings.windows[newName].opened = false; settings.windows[newName].lockable = false; settings.windows[newName].control = ""
+	table.remove(menu.children, 4)
+	local contextMenu3 = menu:addContextMenu("Custom")
+	for k, v in pairs (customApplis) do	
+		contextMenu3:addItem(v.name).onTouch = function() openWindow(v.name) end
+	end
+	customApplis = nil
+end
+
+WCClient.deleteCustomMenu = function(name)
+	settings.windows[name] = nil
+	customApplis = loadJsonData("/home/wincraft/client/applications/dataApplis.json", json)
+	table.remove(menu.children, 4)
+	local contextMenu3 = menu:addContextMenu("Custom")
+	for k, v in pairs (customApplis) do	
+		contextMenu3:addItem(v.name).onTouch = function() openWindow(v.name) end
+	end
+	customApplis = nil
+end
 
 local display = function()
 	WCClient.application = WCClient.GUI.application()
@@ -255,64 +385,157 @@ local display = function()
 			term = require "term"; term.clear(); WCClient.application:stop(); os.exit(); 
 	end
 	local contextMenu2 = menu:addContextMenu("Application")
-	for k, v in pairs (settings.windows) do
+	for k, v in pairs (settings.windows) do	
 		contextMenu2:addItem(k).onTouch = function() openWindow(k) end
 		d.p("added window: "..k)
 	end
+	
 	local contextMenu3 = menu:addContextMenu("Locks")
 	contextMenu3:addItem("Unlock OrdersModif Window").onTouch = function() WCClient.lockWindow("OrdersModif", false) end
+
+	local contextMenu4 = menu:addContextMenu("Custom")
+	for k, v in pairs (customApplis) do	
+		contextMenu4:addItem(v.name).onTouch = function() openWindow(v.name) end
+		settings.windows[v.name] = {};settings.windows[v.name].opened = false; settings.windows[v.name].lockable = false; settings.windows[v.name].control = ""
+		d.p("added custom window: "..v.name)
+	end
+	customApplis = nil
 	
 	WCClient.application:draw(true)
 	WCClient.application:start()
 end
+
+	--table.remove(contextMenu3.itemsContainer.children, 1)
+	--table.remove(contextMenu3.itemsContainer.children, 1)
+	
+--	for k, v in ipairs(contextMenu3.itemsContainer.children) do
+--		v.x = v.x - 2 * 1	
+--	end
+	
+	--contextMenu3:removeChildren()
+	
+--	contextMenu3:addItem("coucou")
+	--contextMenu3:update()
+	
+	--local function dropDownMenuRemoveItem(menu, index)
+	--	table.remove(menu.itemsContainer.children, index)
+	--	menu:update()
+	--	return menu
+	--end
 
 local mainLoop = function()
 	thread.create(function()
 		local offOn
 		while true do
 			--eventType,dest,src,aport,strength,order, block, side, origValue, newValue, color
+			p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11 = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
 			p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11 = event.pullMultiple("modem_message", "redstone_changed")
+			d.p(d.okv(p1).." "..d.okv(p2).." "..d.okv(p3).." "..d.okv(p4).." "..d.okv(p5).." "..d.okv(p6).." "..d.okv(p7).." "..d.okv(p8).." "..d.okv(p9).." "..d.okv(p10).." "..d.okv(p11))
 			local eventType = p1;
 			if eventType == "modem_message" then
 				d.p("modem message received")
 				local dest = p2; local src = p3; local aport = p4; local strength = p5; local order = p6 
-				
 				if order == "remote_redstone_changed" then
-					local block = p7; local side = tostring(p8); local origValue = p9; local newValue = p10; local color = tostring(p11)
 					d.p("remote_redstone_changed received")
+					--local block = p7; local side = tostring(p8); local origValue = p9; local newValue = p10; local color = tostring(p11)
+					local block = p7; local side = p8; local origValue = p9; local newValue = p10; local color = p11
+					
+					if origValue == "" then origValue = 0 end---
+					if newValue == "" then newValue = 0 end---
+					if side == "" then side = 0 end---
+					if color == "" then color = 0 end---
 					if newValue == 0 then offOn = false else offOn = true end
+					
 					applyChanges(block, side, origValue, newValue, color)
+					d.p("remote_redstone_changed --applyChanges done")
 				elseif order == "remote_order_changed" then
+					d.p("remote_order_changed")
 					local action = p7; local orderName = p8; 
 					if action == "ins" and src ~= modem.address then
+						d.p("ins")
 						local actualOrder = p9
-						local json = require "json"
+						--local json = require "json"
 						WCClient.dataOrders[orderName] = json.decode(actualOrder)
-						package.loaded.json = nil
+						--package.loaded.json = nil
 					elseif action == "upd" and src ~= modem.address then
+						d.p("upd")
 						local newOrderName = p9; local actualOrder = p10
-						local json = require "json"
+						--local json = require "json"
 						WCClient.dataOrders[newOrderName] = json.decode(actualOrder)
 						if newOrderName ~= orderName then
 							WCClient.dataOrders[orderName] = nil
 						end
-						package.loaded.json = nil
+						--package.loaded.json = nil
 					elseif action == "del" and src ~= modem.address then
+						d.p("del")
 						WCClient.dataOrders[orderName] = nil
 					end
 					applyChangesOrdersList()
+					d.p("remote_order_changed --applyChangesOrdersList done")
+				elseif order == "remote_alias_changed" then	
+					d.p("remote_alias_changed")
+					local action = p7;
+					if action == "ins" then
+						d.p("ins")
+						local parentAlias = p8
+						local aliasName = p9; 
+						local actualAlias = p10
+						local parentNode = aliasNode.getDataNode(WCClient.dataAliases, parentAlias)
+						local decodedAlias = json.decode(actualAlias)
+						table.insert(parentNode.children, decodedAlias)
+					elseif action == "upd" then
+						d.p("upd")
+						local oldAliasName = p8; 
+						local newAliasName = p9; local actualAlias = p10
+						local parentNode = aliasNode.getParentDataNode(WCClient.dataAliases, oldAliasName)
+						local i
+						for k, v in ipairs(parentNode.children) do
+							if v.name == oldAliasName then	i = k;	break end
+						end
+						table.remove(parentNode.children, i)
+						table.insert(parentNode.children, i, json.decode(actualAlias))
+					elseif action == "del" then
+						d.p("del")
+						local aliasName = p8; 
+						local parentNode = aliasNode.getParentDataNode(WCClient.dataAliases, aliasName)
+						for k, v in ipairs(parentNode.children) do
+							if v.name == aliasName then table.remove(parentNode.children, k); break	end
+						end
+					elseif action == "updown" then
+						d.p("updown")
+						local parentAliasName = p8
+						local index = p9
+						local upDown = p10
+						local parentAlias = aliasNode.getDataNode(WCClient.dataAliases, parentAliasName)
+						if upDown then
+							local selectedAlias = parentAlias.children[index]
+							table.remove(parentAlias.children, index)
+							table.insert(parentAlias.children, index + 1, selectedAlias)
+						else
+							local aliasToBeSwapped = parentAlias.children[index - 1]
+							table.remove(parentAlias.children, index - 1)
+							table.insert(parentAlias.children, index, aliasToBeSwapped)
+						end
+					end
+					applyChangesAliasesList()
+					d.p("remote_alias_changed --applyChangesAliasesList done")
 				elseif order == "remote_locked_changed"	then
+					d.p("remote_locked_changed")
 					local windowName = p7; local offOn = p8; 
 					WCClient.dataWindowsLocked[windowName] = offOn
 					if offOn == false and src ~= modem.address and settings.windows[windowName].opened == true then WCClient.closeWindow(windowName) end
+					d.p("remote_locked_changed --done")
 				elseif order == "remote_execute_order_changed"	then
+					d.p("remote_execute_order_changed")
 					local orderName = p7; local action = p8; local offOn = p9
+					--WCClient.GUI.alert("fucking holy shit")
 					applyChangesOrderAction(orderName, action, offOn)
+					d.p("remote_execute_order_changed --applyChangesOrderAction done")
 				end
 			elseif eventType == "redstone_changed" then
 				d.p("redstone message received")
-				local block = p2; local side = tostring(p3); local origValue = p4; local newValue = p5; local color = tostring(p6)
-				
+				local block = p2; local side = p3; local origValue = p4; local newValue = p5; local color = p6
+				d.p("not implemented yet")
 			end
 		end
 	end)
@@ -381,10 +604,14 @@ local connect = function()
 	end
 end
 
+
+
 local loadConfig = function()
-	local json = require("json")
-	settings = json.decode(io.open("/home/wincraft/client/"..settingFile, "r"):read("*all"))
-	json = nil; package.loaded.json = nil
+	settings = loadJsonData("/home/wincraft/client/"..settingFile, json)
+	if settings.debug then d.setLogOn(true) end
+	customApplis = loadJsonData("/home/wincraft/client/applications/dataApplis.json", json)
+	--settings = json.decode(io.open("/home/wincraft/client/"..settingFile, "r"):read("*all"))
+	--customApplis = json.decode(io.open("/home/wincraft/client/applications/dataApplis.json", "r"):read("*all"))
 	port = settings.port
 end
 

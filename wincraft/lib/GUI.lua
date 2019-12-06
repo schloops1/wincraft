@@ -311,7 +311,7 @@ local function getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, R2X1, R2Y1, R2X2
 	end
 end
 
-function containerDraw(container)
+function oldcontainerDraw(container)
 	local R1X1, R1Y1, R1X2, R1Y2, child = buffer.getDrawLimit()
 	local intersectionX1, intersectionY1, intersectionX2, intersectionY2 = getRectangleIntersection(
 		R1X1,
@@ -335,6 +335,58 @@ function containerDraw(container)
 				child:draw()
 			end
 		end
+
+		buffer.setDrawLimit(R1X1, R1Y1, R1X2, R1Y2)
+	end
+
+	return container
+end
+
+
+function containerDraw(container)
+	local R1X1, R1Y1, R1X2, R1Y2, child = buffer.getDrawLimit()
+	local intersectionX1, intersectionY1, intersectionX2, intersectionY2 = getRectangleIntersection(
+		R1X1,
+		R1Y1,
+		R1X2,
+		R1Y2,
+		container.x,
+		container.y,
+		container.x + container.width - 1,
+		container.y + container.height - 1
+	)
+
+	if intersectionX1 then
+		buffer.setDrawLimit(intersectionX1, intersectionY1, intersectionX2, intersectionY2)
+
+		if container.fromItem == nil then container.fromItem = 1 end
+
+--		if container.fromItem ~= nil then
+--			local offset = container.fromItem -1
+--			for i = container.fromItem, #container.children do
+--				child = container.children[i]
+
+--				if not child.hidden then
+--					child.x, child.y = container.x + child.localX - 1, container.y + child.localY - 1 - offset
+--					child:draw()
+--				end
+--			end
+		
+--		else
+			
+			for i = container.fromItem, #container.children do
+			--for i = 1, #container.children do
+				child = container.children[i]
+
+				if not child.hidden then
+					child.x, child.y = container.x + child.localX - 1, container.y + child.localY - 1 - (container.fromItem -1) --jpi
+--					child.x, child.y = container.x + child.localX - 1, container.y + child.localY - 1
+					child:draw()
+				end
+			end
+
+			
+--		end
 
 		buffer.setDrawLimit(R1X1, R1Y1, R1X2, R1Y2)
 	end
@@ -1467,6 +1519,7 @@ function GUI.switch(x, y, width, activeColor, passiveColor, pipeColor, state)
 	switch.animated = true
 	switch.animationDuration = GUI.SWITCH_ANIMATION_DURATION
 	switch.setState = switchSetState
+	switch.switch = switch
 
 	switch:setState(state)
 	
@@ -2458,6 +2511,161 @@ function GUI.tree(x, y, width, height, backgroundColor, expandableColor, notExpa
 	tree.addItem = treeAddItem
 	tree.draw = treeDraw
 
+	return tree
+end
+
+--------------------------------------------------------------------------------
+
+local function treeAliasDraw(tree)	
+	local y, yEnd, showScrollBar = tree.y, tree.y + tree.height - 1, #tree.items > tree.height
+	local textLimit = tree.width - (showScrollBar and 1 or 0)
+
+	if tree.colors.default.background then
+		buffer.drawRectangle(tree.x, tree.y, tree.width, tree.height, tree.colors.default.background, tree.colors.default.expandable, " ")
+	end
+
+	for i = tree.fromItem, #tree.items do
+		local textColor, arrowColor, text = tree.colors.default.notExpandable, tree.colors.default.arrow, tree.items[i].expandable and "¦ " or "? "
+
+		if tree.selectedItem == i + tree.fromItem - 1 then
+			textColor, arrowColor = tree.colors.selected.any, tree.colors.selected.arrow
+			buffer.drawRectangle(tree.x, y, tree.width, 1, tree.colors.selected.background, textColor, " ")
+		else
+			if tree.items[i].expandable then
+				textColor = tree.colors.default.expandable
+			elseif tree.items[i].disabled then
+				textColor = tree.colors.disabled
+			end
+		end
+
+		if tree.items[i].expandable then
+			buffer.drawText(tree.x + tree.items[i].offset, y, arrowColor, tree.expandedItems[tree.items[i].definition] and "?" or "?")
+		end
+
+		buffer.drawText(tree.x + tree.items[i].offset + 2, y, textColor, unicode.sub(text .. tree.items[i].name, 1, textLimit - tree.items[i].offset - 2))
+
+		y = y + 1
+		if y > yEnd then break end
+	end
+
+	if showScrollBar then
+		local scrollBar = tree.scrollBar
+		scrollBar.x = tree.x + tree.width - 1
+		scrollBar.y = tree.y
+		scrollBar.width = 1
+		scrollBar.height = tree.height
+		scrollBar.colors.background = tree.colors.scrollBar.background
+		scrollBar.colors.foreground = tree.colors.scrollBar.foreground
+		scrollBar.minimumValue = 1
+		scrollBar.maximumValue = #tree.items
+		scrollBar.value = tree.fromItem
+		scrollBar.shownValueCount = tree.height
+		scrollBar.onScrollValueIncrement = 1
+		scrollBar.thin = true
+
+		scrollBar:draw()
+	end
+
+	return tree
+end
+
+local function treeUpdateAliasListRecursively(tree, anode, offset)
+	treeAddItem(tree, anode.name, "", offset, true, false)
+	if anode.exp then
+		for _, node in ipairs(anode.children) do
+			if node.node == true then
+				treeUpdateAliasListRecursively(tree, node, offset + 1)
+			else
+				treeAddItem(tree, node.name, "", offset, false, false)
+			end
+		end
+	end
+end
+
+local function getParentDataNode(anode, name)
+	if anode.name == name then return anode end
+	--if anode.exp then
+		for _, node in ipairs(anode.children) do
+			if node.name == name then return anode end
+			if node.node == true then
+				local f = getParentDataNode(node, name)
+				if f ~= nil then return f end
+			end
+		end
+	--end
+end
+
+local function getDataNode(anode, name)
+	if anode.name == name then return anode end
+	--if anode.exp then
+		for _, node in ipairs(anode.children) do
+			if node.name == name then return node end
+			if node.node == true then
+				local f = getDataNode(node, name)
+				if f ~= nil then return f end
+			end
+		end
+	--end
+end
+
+local function treeAliasEventHandler(application, tree, e1, e2, e3, e4, e5, ...)
+	if e1 == "touch" then
+		local i = e4 - tree.y + tree.fromItem
+		if tree.items[i] then
+			if tree.items[i].expandable and
+				(e3 >= tree.x + tree.items[i].offset - 1 and e3 <= tree.x + tree.items[i].offset + 1)
+			then
+				--local elem = getDataNode(tree.dataNode, tree.items[i].name)
+				local elem = getDataNode(tree.dataNode, tree.items[i].name)
+				elem.exp = not elem.exp
+				treeUpdateAliasList(tree)
+				if tree.onItemExpanded then
+					tree.onItemExpanded(tree.selectedItem, e1, e2, e3, e4, e5, ...)
+				end
+			else
+				if not tree.items[i].disabled
+				then
+					tree.selectedItem = i
+					if tree.onItemSelected then
+						tree.onItemSelected(tree.selectedItem, e1, e2, e3, e4, e5, ...)
+					end
+				end
+			end
+			application:draw()
+		end
+	elseif e1 == "scroll" then
+		if e5 == 1 then
+			if tree.fromItem > 1 then
+				tree.fromItem = tree.fromItem - 1
+				application:draw()
+			end
+		else
+			if tree.fromItem < #tree.items then
+				tree.fromItem = tree.fromItem + 1
+				application:draw()
+			end
+		end
+	end
+end
+
+function treeUpdateAliasList(tree)
+	tree.items = {}
+	treeUpdateAliasListRecursively(tree, tree.dataNode, 1)
+end
+
+function GUI.aliasTree(node, ...) --jpi
+	local tree = GUI.tree(...)
+	tree.eventHandler = treeAliasEventHandler
+	tree.dataNode = node
+	tree.onItemExpanded = function() tree:treeUpdateAliasList() end
+	tree.draw = treeAliasDraw
+	tree.getSelectedName = function(self) return self.items[self.selectedItem + self.fromItem - 1].name end
+	treeUpdateAliasList(tree)
+	tree.getDataNode = getDataNode
+	tree.getParentDataNode = getParentDataNode
+	tree.refresh = treeUpdateAliasList
+	tree.switch = {}
+	--tree.switch.refresh = treeUpdateAliasList
 	return tree
 end
 
@@ -3545,6 +3753,30 @@ local function listItemEventHandler(application, item, e1, ...)
 		if item.onTouch then
 			item.onTouch(application, item, e1, ...)
 		end
+		
+	elseif e1 == "scroll" then
+		--print("e1: "..e1.."e2: "..e2.."e3: "..e3.."e4: "..e4)
+		--GUI.alert("e1: "..e1.." "..arg[1])
+		local arg = {...}
+		--GUI.alert("arg: "..arg[4])
+		--for i,v in ipairs(arg) do
+		--	GUI.alert(i..e1.." "..v)
+		--end
+		
+		if arg[4] == 1 then
+--			GUI.alert("==1")
+			if item.parent.fromItem > 1 then
+				item.parent.fromItem = item.parent.fromItem - 1
+				application:draw()
+			end
+		else
+--			GUI.alert("~=1")
+			if item.parent.fromItem < #item.parent.children then
+				item.parent.fromItem = item.parent.fromItem + 1
+				application:draw()
+			end
+		end
+		
 	end
 end
 
@@ -3627,6 +3859,9 @@ function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textC
 
 	list.passScreenEvents = false
 	list.selectedItem = 1
+	
+	list.fromItem = 1
+	
 	list.offsetMode = offsetMode
 	list.itemSize = itemSize
 	
@@ -4295,7 +4530,7 @@ function GUI.filledWindow(x, y, width, height, backgroundColor)
 	return window
 end
 
-function GUI.titledWindow(x, y, width, height, title, addTitlePanel)
+function GUI.titledWindow(x, y, width, height, title, addTitlePanel, background)
 	local window = GUI.filledWindow(x, y, width, height, GUI.WINDOW_BACKGROUND_PANEL_COLOR)
 
 	if addTitlePanel then

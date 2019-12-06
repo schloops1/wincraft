@@ -1,6 +1,11 @@
 local dump = {}
 
-dump.pOffOn = true
+local pOffOn = false
+
+dump.setLogOn = function(offOn)
+	pOffOn = offOn
+	if pOffOn then io.open("log.txt","w"):close() end
+end
 
 dump.dmp = function (o)
    if type(o) == 'table' then
@@ -29,10 +34,6 @@ dump.dmpJsonFile = function (o, fileName)
 	fil:close()
 end
 
-
-
-
-
 dump.ok = function(k)
 	if k == true or k == false then
 		return tostring(k)
@@ -54,12 +55,8 @@ dump.okv = function(k)
 	end
 end
 
-dump.newLog = function()
-	io.open("log.txt","w"):close()
-end
-
 dump.p = function(text)
-  if dump.pOffOn == false then return end
+  if pOffOn == false then return end
   local f=io.open("log.txt","a")
   f:write(text)
   f:write("\n")

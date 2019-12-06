@@ -7,7 +7,7 @@ local dmp = require "dump"
 local client
 local name
 
-local memory = {}
+--local memory = {}
 
 function OrdersModif:set(aname)
 	client = self; name = aname
@@ -29,6 +29,7 @@ local sideField
 local colorField
 local forceField
 local timeField
+local aliasField
 local orderNameField
 local orderNameToBeSelected = nil
 
@@ -56,7 +57,7 @@ insertOrder = function()
 	if tonumber(orderRepeat.text) == nil then return end
 	orderName.text = string.gsub(orderName.text, '%W','')
 	if string.len(orderName.text) > 16 then orderName.text = string.sub(orderName.text, 1, 16) end
-	newOrder = {}	
+	newOrder = {}
 	newOrder.id = getNextOrderId()
 	newOrder["repeat"] = orderRepeat.text
 	newOrder["offOn"] = false
@@ -121,6 +122,13 @@ insertOrderItem = function()
 		orderItem["side"] = sideField.selectedItem - 1
 		orderItem["color"] = colorField.selectedItem - 1
 		orderItem["force"] = forceField.text
+
+	elseif orderItem["type"] == "outAlias" or orderItem["type"] == "cleanOAl" then	
+		if tonumber(forceField.text) == nil then return end
+		if tonumber(forceField.text) > 255 then forceField.text = "255" end
+		orderItem["alias"] = aliasField:getItem(aliasField.selectedItem).text
+		orderItem["force"] = forceField.text
+
 	elseif orderItem["type"] == "wait" or orderItem["type"] == "cleanW" then
 		if tonumber(timeField.text) == nil then return end
 		orderItem["time"] = timeField.text
@@ -150,6 +158,13 @@ updateOrderItem = function()
 		orderItem["side"] = sideField.selectedItem - 1
 		orderItem["color"] = colorField.selectedItem - 1
 		orderItem["force"] = forceField.text
+		
+	elseif orderItem["type"] == "outAlias" or orderItem["type"] == "cleanOAl" then	
+		if tonumber(forceField.text) == nil then return end
+		if tonumber(forceField.text) > 255 then forceField.text = "255" end
+		orderItem["alias"] = aliasField:getItem(aliasField.selectedItem).text
+		orderItem["force"] = forceField.text
+		
 	elseif orderItem["type"] == "wait" or orderItem["type"] == "cleanW" then
 		if tonumber(timeField.text) == nil then return end
 		orderItem["time"] = timeField.text
@@ -192,6 +207,11 @@ displayOrderHudAndItems = function(name)
 			astring = astring.." I block:"..string.sub(v.block, 1, 8).." side:"..sides[v.side].." color:"..colors[v.color].." "..v["force"]
 		elseif v["type"] == "cleanOut" then
 			astring = astring.." CO block:"..string.sub(v.block, 1, 8).." side:"..sides[v.side].." color:"..colors[v.color].." "..v["force"]
+		elseif v["type"] == "outAlias" then
+			astring = astring.." OA alias:"..v.alias.." "..v["force"]
+		elseif v["type"] == "cleanOAl" then
+			astring = astring.." COA alias:"..v.alias.." "..v["force"]	
+			
 		elseif v["type"] == "wait" then
 			astring = astring.." W wait "..dmp.okv(v.time).."s"
 		elseif v["type"] == "execOrder" then
@@ -222,30 +242,40 @@ displayOrderItemCRUD = function(id, action, typeValue)
 	idField = containerFields:addChild(client.GUI.text(2, 2, 0xFFFFFF, "Id:"..dmp.okv(id)))
 	typeField = containerFields:addChild(client.GUI.comboBox(9, 2, 10, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
 	typeField:addItem("output").onTouch = function() displayOrderItemCRUD(id, action, "output") end
+	typeField:addItem("outAlias").onTouch = function() displayOrderItemCRUD(id, action, "outAlias") end
 	typeField:addItem("wait").onTouch = function() displayOrderItemCRUD(id, action, "wait") end
 	typeField:addItem("input").onTouch = function() displayOrderItemCRUD(id, action, "input") end
 	typeField:addItem("execOrder").onTouch = function() displayOrderItemCRUD(id, action, "execOrder") end
 	typeField:addItem("killOrder").onTouch = function() displayOrderItemCRUD(id, action, "killOrder") end
 	typeField:addItem("cleanOut").onTouch = function() displayOrderItemCRUD(id, action, "cleanOut") end
+	typeField:addItem("cleanOAl").onTouch = function() displayOrderItemCRUD(id, action, "cleanOAl") end
 	typeField:addItem("cleanW").onTouch = function() displayOrderItemCRUD(id, action, "cleanW") end
 
 	if (order ~= nil and order["type"] == "output") or (action ~= nil and action == "ins" and typeValue == nil) or (typeValue ~= nil and typeValue == "output") then 
 		typeField.selectedItem = 1
-	elseif (order ~= nil and order["type"] == "wait") or (typeValue ~= nil and typeValue == "wait") then 
+	
+	elseif (order ~= nil and order["type"] == "outAlias") or (typeValue ~= nil and typeValue == "outAlias") then 
 		typeField.selectedItem = 2
-	elseif (order ~= nil and order["type"] == "input") or (typeValue ~= nil and typeValue == "input") then 
+	
+	elseif (order ~= nil and order["type"] == "wait") or (typeValue ~= nil and typeValue == "wait") then 
 		typeField.selectedItem = 3
-	elseif (order ~= nil and order["type"] == "execOrder") or (typeValue ~= nil and typeValue == "execOrder") then 
+	elseif (order ~= nil and order["type"] == "input") or (typeValue ~= nil and typeValue == "input") then 
 		typeField.selectedItem = 4
-	elseif (order ~= nil and order["type"] == "killOrder") or (typeValue ~= nil and typeValue == "killOrder") then 
+	elseif (order ~= nil and order["type"] == "execOrder") or (typeValue ~= nil and typeValue == "execOrder") then 
 		typeField.selectedItem = 5
+	elseif (order ~= nil and order["type"] == "killOrder") or (typeValue ~= nil and typeValue == "killOrder") then 
+		typeField.selectedItem = 6
 	elseif (order ~= nil and order["type"] == "cleanOut") or (typeValue ~= nil and typeValue == "cleanOut") then 
-		typeField.selectedItem = 6	
-	elseif (order ~= nil and order["type"] == "cleanW") or (typeValue ~= nil and typeValue == "cleanW") then 
 		typeField.selectedItem = 7	
+		
+	elseif (order ~= nil and order["type"] == "cleanOAl") or (typeValue ~= nil and typeValue == "cleanOAl") then 
+		typeField.selectedItem = 8			
+		
+	elseif (order ~= nil and order["type"] == "cleanW") or (typeValue ~= nil and typeValue == "cleanW") then 
+		typeField.selectedItem = 9	
 	end
 	
-	if typeField.selectedItem == 1 or typeField.selectedItem == 3 or typeField.selectedItem == 6 then --output, input, cleanOut
+	if typeField.selectedItem == 1 or typeField.selectedItem == 4 or typeField.selectedItem == 7 then --output, input, cleanOut
 		blockField = containerFields:addChild(client.GUI.comboBox(20, 2, 12, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
 		local ii = 1
 		local iiSelected
@@ -271,11 +301,26 @@ displayOrderItemCRUD = function(id, action, typeValue)
 
 		forceField = containerFields:addChild(client.GUI.input(55, 2, 6, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", ""))
 		if order ~= nil then forceField.text = order.force end
-	elseif typeField.selectedItem == 2 or typeField.selectedItem == 7 then --wait, cleanW
+	elseif typeField.selectedItem == 2 or typeField.selectedItem == 8 then --outAlias, cleanOAl
+		local listAliases = {}
+		local aliasNode = require "AliasNode"		
+		aliasNode.getAllAliases(client.dataAliases, listAliases)
+		aliasField = containerFields:addChild(client.GUI.comboBox(20, 2, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+		local iiSelected = 1
+		for k, v in ipairs(listAliases) do
+			aliasField:addItem(v)
+			if order ~= nil and v == order.alias then iiSelected = k end
+		end
+		aliasField.selectedItem = iiSelected
+
+		forceField = containerFields:addChild(client.GUI.input(37, 2, 6, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", ""))
+		if order ~= nil then forceField.text = order.force end
+
+	elseif typeField.selectedItem == 3 or typeField.selectedItem == 9 then --wait, cleanW
 		timeField = containerFields:addChild(client.GUI.input(20, 2, 12, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", ""))
 		if order ~= nil then timeField.text = order.time end
 		
-	elseif typeField.selectedItem == 4 or typeField.selectedItem == 5 then --execOrder, killOrder
+	elseif typeField.selectedItem == 5 or typeField.selectedItem == 6 then --execOrder, killOrder
 		orderNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 10, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
 		local tkeys = {}; for k in pairs(client.dataOrders) do table.insert(tkeys, k) end; table.sort(tkeys)
  		local i = 1; local iSelected = 0

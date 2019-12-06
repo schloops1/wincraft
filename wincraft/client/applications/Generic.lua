@@ -21,7 +21,8 @@ local switchValues = function()
 	for i = 0, 15 do
 		layoutColors:addChild(client.addSyncSwitch(
 			comboBlock:getItem(comboBlock.selectedItem).text, 
-			sides[comboSide:getItem(comboSide.selectedItem).text], tostring(i), colors[i], name))
+			sides[comboSide:getItem(comboSide.selectedItem).text], i, colors[i], name))
+			--comboSide.selectedItem - 1, i, colors[i], name))
 	end
 end
 	

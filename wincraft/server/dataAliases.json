@@ -1,17 +1,1 @@
-{
-  "Top": 
-  { 
-    "node": true,
-    "aliases": 
-    {
-      "light1": 
-      {
-	"node": false,
-  	"block": "3d7320a4-4113-4e35-a80d-3eb8be1ce2e2",
-  	"side": 2,
-  	"color": 0
-      }
-    }
-  }
-
-}
+{"node":true,"exp":false,"name":"Top","children":[{"node":true,"exp":false,"name":"lights","children":[{"node":false,"block":"3d7320a4-4113-4e35-a80d-3eb8be1ce2e2","side":2,"door":false,"name":"light1","color":0},{"node":false,"block":"3d7320a4-4113-4e35-a80d-3eb8be1ce2e2","side":2,"door":false,"name":"light2","color":1},{"node":false,"block":"3d7320a4-4113-4e35-a80d-3eb8be1ce2e2","side":2,"door":false,"name":"light3","color":2},{"node":false,"block":"3d7320a4-4113-4e35-a80d-3eb8be1ce2e2","side":2,"color":3,"name":"light4","door":false}]},{"node":true,"exp":false,"name":"doors","children":[{"node":false,"block":"3d7320a4-4113-4e35-a80d-3eb8be1ce2e2","side":2,"door":true,"name":"door1","color":15}]}]}
