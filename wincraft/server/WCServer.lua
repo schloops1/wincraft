@@ -79,7 +79,7 @@ end
 WCServer.setBundledOutput = function(block, side, color, charge)
 	block.setBundledOutput(side, color, charge)
 	if settings.higherThan_1_7_10 == false then
-		event.push("redstone_changed", mo.address, side, charge, charge, color)
+		event.push("redstone_changed", block.address, side, charge, charge, color)
 	end
 end
 
