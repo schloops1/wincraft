@@ -4311,6 +4311,10 @@ local function comboBoxGetItem(object, what)
 	end
 end
 
+local function comboBoxGetChildren(object) --jpi
+	return object.dropDownMenu.itemsContainer.children
+end
+
 local function comboBoxRemoveItem(object, index)
 	object.dropDownMenu:removeItem(index)
 	if object.selectedItem > #object.dropDownMenu.itemsContainer.children then
@@ -4403,6 +4407,7 @@ function GUI.comboBox(x, y, width, itemSize, backgroundColor, textColor, arrowBa
 	comboBox.draw = comboBoxDraw
 	comboBox.clear = comboBoxClear
 	comboBox.getItem = comboBoxGetItem
+	comboBox.getChildren = comboBoxGetChildren
 	comboBox.count = comboBoxCount
 	comboBox.eventHandler = comboBoxEventHandler
 
@@ -4531,8 +4536,11 @@ function GUI.filledWindow(x, y, width, height, backgroundColor)
 end
 
 function GUI.titledWindow(x, y, width, height, title, addTitlePanel, background)
-	local window = GUI.filledWindow(x, y, width, height, GUI.WINDOW_BACKGROUND_PANEL_COLOR)
-
+	--local window = GUI.filledWindow(x, y, width, height, GUI.WINDOW_BACKGROUND_PANEL_COLOR)
+	--local window = GUI.filledWindow(x, y, width, height, 0x0000FF)
+	local window = GUI.filledWindow(x, y, width, height, background or GUI.WINDOW_BACKGROUND_PANEL_COLOR)
+	--local window = GUI.filledWindow(x, y, width, height, background)
+	
 	if addTitlePanel then
 		window.titlePanel = window:addChild(GUI.panel(1, 1, width, 1, GUI.WINDOW_TITLE_BACKGROUND_COLOR))
 		window.backgroundPanel.localY, window.backgroundPanel.height = 2, window.height - 1

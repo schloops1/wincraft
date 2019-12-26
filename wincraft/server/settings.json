@@ -1,0 +1,5 @@
+{
+  "port": 1002, 
+  "debug":false,
+  "higherThan_1_7_10":true
+}

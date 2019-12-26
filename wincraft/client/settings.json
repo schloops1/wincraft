@@ -3,8 +3,8 @@
   	"Generic": {"opened": false, "lockable": false, "control": ""},
   	"Orders": {"opened": false, "lockable": false, "control": ""},
   	"OrdersModif": {"opened": false, "lockable": true, "control": ""},
-  	"Aliases": {"opened": false, "lockable": false, "control": ""},
   	"AliasesModif": {"opened": false, "lockable": false, "control": ""},
+  	"VariablesModif": {"opened": false, "lockable": false, "control": ""},
   	"ApplicationFactory": {"opened": false, "lockable": false, "control": ""}
   },
   "port": 1002, "debug":false

@@ -9,4 +9,4 @@ if not string.find(package.path, "/home/wincraft/lib") then
 end
 --print(package.path)
 local WCServer = require "WCServer"
-WCServer.start(1002)
+WCServer.start()

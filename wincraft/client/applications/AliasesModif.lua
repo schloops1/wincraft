@@ -211,23 +211,23 @@ local refresh = function()
 end
 
 AliasesModif.display = function()
-	local window = client.application:addChild(client.GUI.titledWindow(50, 22, 66, 21, name, true))
+	local window = client.application:addChild(client.GUI.titledWindow(50, 22, 74, 21, name, true))
 	window.actionButtons.close.onTouch = function() client.closeWindow(name) end
 
-	tree = client.GUI.aliasTree(client.dataAliases, 2, 2, 20, 19, 0x11E1E1, 0x3C3C3C, 0x3C3C3C, 0xA5A5A5, 0x3C3C3C, 0xE1E1E1, 
+	tree = client.GUI.aliasTree(client.dataAliases, 2, 2, 28, 19, 0x11E1E1, 0x3C3C3C, 0x3C3C3C, 0xA5A5A5, 0x3C3C3C, 0xE1E1E1, 
 		0xB4B4B4, 0xA5A5A5, 0xC3C3C3, 0x4B4B4B)
 	window:addChild(tree); tree.onItemSelected = itemSelected; tree.onItemExpanded = onItemExpanded
 
 	tree.switch.refresh = refresh
 	client.listenToAliasesList(tree, name)
 
-	local panelHEAD = window:addChild(client.GUI.panel(24, 2, 42, 5, 0x880000))
+	local panelHEAD = window:addChild(client.GUI.panel(32, 2, 42, 5, 0x880000))
 	containerHEAD = window:addChild(client.GUI.container(panelHEAD.x, panelHEAD.y, panelHEAD.width, panelHEAD.height))
 
-	local panelCRUD = window:addChild(client.GUI.panel(24, 8, 42, 9, 0x880000))
+	local panelCRUD = window:addChild(client.GUI.panel(32, 8, 42, 9, 0x880000))
 	containerCRUD = window:addChild(client.GUI.container(panelCRUD.x, panelCRUD.y, panelCRUD.width, panelCRUD.height))
 
-	local panelBUTTONS = window:addChild(client.GUI.panel(24, 18, 42, 3, 0x880000))
+	local panelBUTTONS = window:addChild(client.GUI.panel(32, 18, 42, 3, 0x880000))
 	containerButtons = window:addChild(client.GUI.container(panelBUTTONS.x, panelBUTTONS.y, panelBUTTONS.width, panelBUTTONS.height))
 
 	displayButtons()

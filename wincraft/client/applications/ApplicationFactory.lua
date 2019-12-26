@@ -144,6 +144,7 @@ deleteAppli = function()
 			table.remove(dataApplis, k)
 		end
 	end
+	cleanCRUDFields()
 	saveData()
 	deleteAppliFile()
 	client.deleteCustomMenu(appliNameField.text)
@@ -345,7 +346,7 @@ displayAppliItemCRUD = function(id, action, typeValue)
 		forceField = containerFields:addChild(client.GUI.input(37, 2, 6, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", ""))
 		if item ~= nil then forceField.text = item.force end
 	elseif typeField.selectedItem == 3 then --execOrder
-		orderNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 10, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+		orderNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 20, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
 		local tkeys = {}; for k in pairs(client.dataOrders) do table.insert(tkeys, k) end; table.sort(tkeys)
 		local i = 1; local iSelected = 0
 		for _, k in ipairs (tkeys) do
@@ -413,8 +414,9 @@ displayApplis = function(name)
  	applisList.selectedItem = i
  	if appli == nil and applisList:count() > 0 then appli = getAppli(applisList:getItem(1).text) end
  	--if orderNameToBeSelected == nil and ordersList:count() > 0 then ordersList.selectedItem = 1; displayOrderHudAndItems(ordersList:getItem(1).text) end
-	client.application:draw()
+	----client.application:draw()
 	if appli ~= nil then appliSelected(appli.name) end
+	client.application:draw()
 end
 
 displayAppliCRUDCommands = function(action)

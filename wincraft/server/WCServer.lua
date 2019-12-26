@@ -11,18 +11,21 @@ local serialization = require "serialization"
 package.loaded.dump = nil
 local d = require "dump"
 package.loaded.AliasNode = nil
+local json = require "json"
 local aliasNode = require "AliasNode"
---d.newLog()
+local settings
 local data = {}
 local dataOrders = {}
 local dataAliases = {}
+local dataVariables = {}
+local dataVariablesList = {}
 local dataWindowsLocked = {}
 
 local threads = {}
 
 local saveBlocks = function(blocks)	d.dmpFile(blocks, "blocks.json") end
 
-local loadJsonData = function(fileName, json)
+local loadJsonData = function(fileName)
 	local f = io.open("./wincraft/server/"..fileName, "r")
 	local data = json.decode(f:read("*all"))
 	f:close()
@@ -31,10 +34,36 @@ end
 
 local saveJsonData = function(fileName, data)
 	local f=io.open("./wincraft/server/"..fileName,"w")
-	local json = require "json"
 	f:write(json.encode(data))
 	f:close()
-	package.loaded.json = nil	
+end
+
+local loadVariables = function()
+	local fs = require("filesystem")
+	dataVariables = loadJsonData("dataVariables.json")
+	dataVariablesList = loadJsonData("dataVariablesList.json")
+
+	for fileName in fs.list("/home/wincraft/server/variables") do
+		local f = io.open("./wincraft/server/variables/"..fileName, "r")  	
+	  	dataVariablesList[fileName].value = f:read("*all") --json.decode(f:read("*all") )
+	  	f:close()
+	end
+end
+
+local saveVariables = function()
+	local f=io.open("./wincraft/server/variables/dataVariables.json","w")
+	f:write(json.encode(dataVariables))
+	f:close()
+	
+	f=io.open("./wincraft/server/variables/dataVariablesList.json","w")
+	f:write(json.encode(dataVariablesList))
+	f:close()
+end
+
+local saveVariable = function(fileName)
+	local f=io.open("./wincraft/server/variables/"..fileName..".json","w")
+	f:write(json.encode(dataVariablesList[fileName]).value)
+	f:close()
 end
 
 local saveOrder = function(fileName, data)
@@ -47,12 +76,19 @@ local removeOrder = function(fileName)
 	local fs = require "filesystem"; fs.remove("/home/wincraft/server/orders/"..fileName..".lua")
 end
 
+WCServer.setBundledOutput = function(block, side, color, charge)
+	block.setBundledOutput(side, color, charge)
+	if settings.higherThan_1_7_10 == false then
+		event.push("redstone_changed", mo.address, side, charge, charge, color)
+	end
+end
+
 local fetchData = function()
-	local json = require "json"
-	
-	dataAliases = loadJsonData("dataAliases.json", json)
-	dataOrders = loadJsonData("dataOrders.json", json)	
-	dataWindowsLocked = loadJsonData("dataWindowsLocked.json", json)
+	--saveBlocks(co.list("redstone"))
+	dataAliases = loadJsonData("dataAliases.json")
+	dataOrders = loadJsonData("dataOrders.json")	
+	dataWindowsLocked = loadJsonData("dataWindowsLocked.json")
+	loadVariables()
 
 	for k, v in pairs (dataOrders) do v.offOn = false end
 	
@@ -60,18 +96,19 @@ local fetchData = function()
 	data = {}
 	for key,value in pairs(co.list("redstone")) do 
 		block = co.proxy(key)
-		data[key] = {}
-		for side = 0,5 do 
-			binairyValue = 0
-			for color = 0, 15 do
-				if block.getBundledOutput(side, color) > 0 then offOn = 1 else offOn = 0 end
-				binairyValue = binairyValue + offOn * 2^color
+		if block.getInput ~= nil then
+			data[key] = {}
+			for side = 0,5 do 
+				binairyValue = 0
+				for color = 0, 15 do
+					if block.getBundledOutput(side, color) > 0 then offOn = 1 else offOn = 0 end
+					binairyValue = binairyValue + offOn * 2^color
+				end
+				data[key][side] = binairyValue
 			end
-			data[key][side] = binairyValue
 		end
 	end
-	saveBlocks(co.list("redstone"))
-	package.loaded.json = nil
+	
 	return data
 end
 
@@ -82,6 +119,10 @@ end
 
 local gWindowsLocked = function(eventType,dest,src,aport)
 	mo.send(src, port, "GWinLock", serialization.serialize(dataWindowsLocked))
+end
+
+local gServerVars = function(_, _, src)
+	mo.send(src, port, "GVars", serialization.serialize(dataVariables), serialization.serialize(dataVariablesList))
 end
 
 local gOrders = function(eventType,dest,src,aport)
@@ -110,7 +151,8 @@ local tSignal = function(eventType,dest,src,aport,strength,order, block, side, c
 	if rs.getBundledOutput(side, color) == 0 then
 		charge = 255
 	else charge = 0 end
-	rs.setBundledOutput(side, color, charge)
+	--rs.setBundledOutput(side, color, charge)
+	WCServer.setBundledOutput(rs, side, color, charge)
 end
 
 local sSignalTime = function(eventType,dest,src,aport,strength,order, block, side, color, offOn, time)
@@ -124,7 +166,8 @@ end
 local sSignal = function(eventType,dest,src,aport,strength,order, block, side, color, offOn)
 	if offOn == false then charge = 0 else charge = 255	end
 	rs = co.proxy(block)
-	rs.setBundledOutput(side, color, charge)
+	--rs.setBundledOutput(side, color, charge)
+	WCServer.setBundledOutput(rs, side, color, charge)
 end
 
 local gSignal = function(eventType,dest,src,aport,strength,order, block, side, color, offOn)
@@ -142,9 +185,13 @@ local saveOrderExecFile = function(orderName)
 	if dataOrders[orderName]["repeat"] ~= "0" then o = o.." for i=0, "..dataOrders[orderName]["repeat"].." do " end
 	for k, v in pairs (dataOrders[orderName].orders) do
 		if v["type"] == "output" then
-			o = o.."co.proxy('"..v.block.."').setBundledOutput("..v.side..", "..v.color..", "..v.force.."); "
+			--o = o.."co.proxy('"..v.block.."').setBundledOutput("..v.side..", "..v.color..", "..v.force.."); "
+			o = o.."WCServer.setBundledOutput(co.proxy('"..v.block.."'),"..v.side..", "..v.color..", "..v.force.."); "
+			
 		elseif v["type"] == "cleanOut" then	
-			f = f.."co.proxy('"..v.block.."').setBundledOutput("..v.side..", "..v.color..", "..v.force.."); "
+			--f = f.."co.proxy('"..v.block.."').setBundledOutput("..v.side..", "..v.color..", "..v.force.."); "
+			f = f.."WCServer.setBundledOutput(co.proxy('"..v.block.."'),"..v.side..", "..v.color..", "..v.force.."); "
+			
 		elseif v["type"] == "wait" then
 			o = o.."os.sleep("..v["time"].."); "
 		elseif v["type"] == "cleanW" then	
@@ -177,11 +224,19 @@ end
 local function openCloseDoor(node, open)
 	local red = co.proxy(node.block)
 	if red.getBundledOutput(node.side, node.color) == 255 then 
-		red.setBundledOutput(node.side, node.color, 0) 
-		if open then red.setBundledOutput(node.side, node.color, 255)end
-	else	
-		red.setBundledOutput(node.side, node.color, 255)
-		if not open then red.setBundledOutput(node.side, node.color, 0) end	
+		--red.setBundledOutput(node.side, node.color, 0) 
+		WCServer.setBundledOutput(red, node.side, node.color, 0)
+		if open then 
+			--red.setBundledOutput(node.side, node.color, 255)
+			WCServer.setBundledOutput(red, node.side, node.color, 255)
+		end
+	else
+		WCServer.setBundledOutput(red, node.side, node.color, 255)
+		--red.setBundledOutput(node.side, node.color, 255)
+		if not open then 
+			--red.setBundledOutput(node.side, node.color, 0) 
+			WCServer.setBundledOutput(red, node.side, node.color, 0)
+		end	
 	end
 end
 
@@ -200,7 +255,8 @@ WCServer.execAliasNode = function(anode, charge)
 				if node.door then
 					openCloseDoor(node, charge > 0)
 				else
-					co.proxy(node.block).setBundledOutput(node.side, node.color, charge)
+					--co.proxy(node.block).setBundledOutput(node.side, node.color, charge)
+					WCServer.setBundledOutput(co.proxy(node.block), node.side, node.color, charge)
 				end
 			end
 		end
@@ -208,7 +264,8 @@ WCServer.execAliasNode = function(anode, charge)
 		if anode.door then
 			openCloseDoor(anode, charge > 0)
 		else
-			co.proxy(anode.block).setBundledOutput(anode.side, anode.color, charge)
+			--co.proxy(anode.block).setBundledOutput(anode.side, anode.color, charge)
+			WCServer.setBundledOutput(co.proxy(anode.block), anode.side, anode.color, charge)
 		end
 	end
 end
@@ -221,7 +278,6 @@ end
 
 local udAlias = function(eventType,dest,src,aport,strength,order, parentAliasName, index, upDown)
 	--up (false) - down (true) alias
-	local json = require "json"
 	local parentAlias = aliasNode.getDataNode(dataAliases, parentAliasName)
 	if upDown then
 		local selectedAlias = parentAlias.children[index]
@@ -233,13 +289,10 @@ local udAlias = function(eventType,dest,src,aport,strength,order, parentAliasNam
 		table.insert(parentAlias.children, index, aliasToBeSwapped)
 	end
 	saveJsonData("dataAliases.json", dataAliases)
-	package.loaded.json = nil
 	mo.broadcast(port, "remote_alias_changed", "updown", parentAliasName, index, upDown)
 end
 
-
 local uAlias = function(eventType,dest,src,aport,strength,order, oldAliasName, newAliasName, actualAlias)
-	local json = require "json"
 	local parentNode = aliasNode.getParentDataNode(dataAliases, oldAliasName)
 	local i
 	for k, v in ipairs(parentNode.children) do
@@ -248,16 +301,13 @@ local uAlias = function(eventType,dest,src,aport,strength,order, oldAliasName, n
 	table.remove(parentNode.children, i)
 	table.insert(parentNode.children, i, json.decode(actualAlias))
 	saveJsonData("dataAliases.json", dataAliases)
-	package.loaded.json = nil
 	mo.broadcast(port, "remote_alias_changed", "upd", oldAliasName, newAliasName, actualAlias)
 end
 
 local iAlias = function(eventType,dest,src,aport,strength,order, aliasParentName, aliasName, actualAlias)
 	local aliasParent = aliasNode.getDataNode(dataAliases, aliasParentName)
-	local json = require "json"
 	table.insert(aliasParent.children, json.decode(actualAlias))
 	saveJsonData("dataAliases.json", dataAliases)
-	package.loaded.json = nil
 	mo.broadcast(port, "remote_alias_changed", "ins", aliasParentName, aliasName, actualAlias)---
 end
 
@@ -270,11 +320,53 @@ local dAlias = function(eventType,dest,src,aport,strength,order, aliasName)
 	mo.broadcast(port, "remote_alias_changed", "del", aliasName)
 end
 
+local udVar = function(eventType,dest,src,aport,strength,order, parentVarName, index, upDown)
+	--up (false) - down (true) var
+	local parentVar = aliasNode.getDataNode(dataVariables, parentVarName)
+	if upDown then
+		local selectedVar = parentVar.children[index]
+		table.remove(parentVar.children, index)
+		table.insert(parentVar.children, index + 1, selectedVar)
+	else
+		local varToBeSwapped = parentVar.children[index - 1]
+		table.remove(parentVar.children, index - 1)
+		table.insert(parentVar.children, index, varToBeSwapped)
+	end
+	saveJsonData("dataVariables.json", dataVariables)
+	mo.broadcast(port, "remote_var_changed", "updown", parentVarName, index, upDown)
+end
+
+local uVar = function(eventType,dest,src,aport,strength,order, oldVarName, newVarName, actualVar)
+	local parentNode = aliasNode.getParentDataNode(dataVariables, oldVarName)
+	local i
+	for k, v in ipairs(parentNode.children) do
+		if v.name == oldVarName then i = k; break	end
+	end
+	table.remove(parentNode.children, i)
+	table.insert(parentNode.children, i, json.decode(actualVar))
+	saveJsonData("dataVariables.json", dataVariables)
+	mo.broadcast(port, "remote_var_changed", "upd", oldVarName, newVarName, actualVar)
+end
+
+local iVar = function(eventType,dest,src,aport,strength,order, varParentName, varName, actualVar)
+	local varParent = aliasNode.getDataNode(dataVariables, varParentName)
+	table.insert(varParent.children, json.decode(actualVar))
+	saveJsonData("dataVariables.json", dataVariables)
+	mo.broadcast(port, "remote_var_changed", "ins", varParentName, varName, actualVar)---
+end
+
+local dVar = function(eventType,dest,src,aport,strength,order, varName)
+	local parent = aliasNode.getParentDataNode(dataVariables, varName)
+	for k, v in ipairs(parent.children) do
+		if v.name == varName then table.remove(parent.children, k); break end
+	end
+	saveJsonData("dataVariables.json", dataVariables)
+	mo.broadcast(port, "remote_var_changed", "del", varName)
+end
+
 local uOrder = function(eventType,dest,src,aport,strength,order, oldOrderName, newOrderName, actualOrder)
-	local json = require "json"
 	dataOrders[newOrderName] = json.decode(actualOrder)
 	if oldOrderName ~= newOrderName then dataOrders[oldOrderName] = nil	end
-	package.loaded.json = nil
 	saveJsonData("dataOrders.json", dataOrders)
 	removeOrder(oldOrderName)
 	saveOrderExecFile(newOrderName)
@@ -292,9 +384,7 @@ local dOrder = function(eventType,dest,src,aport,strength,order, orderName)
 end
 
 local iOrder = function(eventType,dest,src,aport,strength,order, orderName, actualOrder)
-	local json = require "json"
 	dataOrders[orderName] = json.decode(actualOrder)
-	package.loaded.json = nil
 	saveJsonData("dataOrders.json", dataOrders)
 	saveOrderExecFile(orderName)
 	package.loaded[orderName] = nil
@@ -334,10 +424,13 @@ WCServer.threadEnded = function(orderName)
 	mo.broadcast(port, "remote_execute_order_changed", orderName, "offOn", false)
 end
 
-WCServer.start = function(aport)
+WCServer.start = function()
 	os.sleep(1)
-	d.setLogOn(false)
-	port = aport
+	
+	settings = loadJsonData("settings.json")
+	if settings.debug then d.setLogOn(true) end
+	port = settings.port
+
 	fetchData()
 	mo.open(port)
 	for k, v in pairs (dataOrders) do 
@@ -346,6 +439,7 @@ WCServer.start = function(aport)
 	print("Server port: "..port.." opened: "..(mo.isOpen(port) and 'true' or 'false').." -- press 't' to exit")
 	local block, side, origValue, newValue, color
 	local orders = {}
+	orders["GVars"] = gServerVars
 	orders["GAliases"] = gServerAliases
 	orders["GServerAddress"] = gServerAddress
 	orders["GRefresh"] = gServerRefresh
@@ -365,8 +459,13 @@ WCServer.start = function(aport)
 	orders["UAlias"] = uAlias
 	orders["DAlias"] = dAlias
 	orders["UDAlias"] = udAlias
-	orders["EAlias"] = WCServer.eAlias
+	orders["IVar"] = iVar
+	orders["UVar"] = uVar
+	orders["DVar"] = dVar
+	orders["UDVar"] = udVar
 	
+	orders["EAlias"] = WCServer.eAlias
+
 	while true do
 		eventType,dest,src,aport,strength,order, p7, p8, p9, p10, p11 = event.pull()
 		if eventType ~= "key_up" and eventType ~= "key_down" and eventType ~= "touch" and eventType ~= "drop" then

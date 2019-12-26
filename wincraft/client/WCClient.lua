@@ -17,6 +17,8 @@ local menu
 WCClient.data = {}
 WCClient.dataOrders = {}
 WCClient.dataAliases = {}
+WCClient.dataVars = {}
+WCClient.dataVarsList = {}
 local listenData = {}
 listenData.windows = {}
 listenData.orders = {}
@@ -25,6 +27,7 @@ listenData.ordersWindows = {}
 listenData.aliasesWindows = {}
 listenData.alias = {}
 listenData.alias.windows = {}
+listenData.varsWindows = {}
 
 WCClient.dataWindowsLocked = {}
 local settings = {}
@@ -74,6 +77,30 @@ WCClient.insertAlias = function(aliasParentName, aliasName, alias)
 	d.p("insertAlias "..aliasParentName.. " "..aliasName.." sent")
 end
 
+--
+
+WCClient.upDownVar = function(parentVarName, index, upDown)
+	modem.send(srvAddress, port, "UDVar", parentVarName, index, upDown)
+	d.p("upDownVar "..parentVarName.. " "..index.." "..tostring(upDown).." sent")
+end
+
+WCClient.updateVar = function(oldVarName, newVarName, var)
+	modem.send(srvAddress, port, "UVar", oldVarName, newVarName, json.encode(var))
+	d.p("updateVar "..oldVarName.. " "..newVarName.." sent")
+end
+
+WCClient.insertVar = function(varParentName, varName, var)
+	modem.send(srvAddress, port, "IVar", varParentName, varName, json.encode(var))
+	d.p("insertVar "..varParentName.. " "..varName.." sent")
+end
+
+WCClient.deleteVar = function(varName)
+	modem.send(srvAddress, port, "DVar", varName)
+	d.p("deleteVar "..varName.." sent")
+end
+
+--
+
 WCClient.updateOrder = function(oldOrderName, newOrderName, order)
 	modem.send(srvAddress, port, "UOrder", oldOrderName, newOrderName, json.encode(order))
 	d.p("updateOrder "..oldOrderName.. " "..newOrderName.." sent")
@@ -106,6 +133,28 @@ WCClient.listenToAliasesList = function(control, windowName)
 	d.p("listenToAliasesList "..windowName.." done")
 	return control
 end
+
+--
+
+stopListeningToVarsList = function(windowName)
+	listenData.varsWindows[windowName] = nil
+	d.p("stopListeningToVarsList "..windowName.." done")
+end
+
+applyChangesVarsList = function()
+	for k, v in pairs (listenData.varsWindows) do
+		listenData.varsWindows[k].switch.refresh()
+	end
+	d.p("applyChangesVarsList done")
+end
+
+WCClient.listenToVarsList = function(control, windowName)
+	listenData.varsWindows[windowName] = control
+	d.p("listenToVarsList "..windowName.." done")
+	return control
+end
+
+--
 
 stopListeningToOrdersList = function(windowName)
 	listenData.ordersWindows[windowName] = nil
@@ -405,24 +454,6 @@ local display = function()
 	WCClient.application:start()
 end
 
-	--table.remove(contextMenu3.itemsContainer.children, 1)
-	--table.remove(contextMenu3.itemsContainer.children, 1)
-	
---	for k, v in ipairs(contextMenu3.itemsContainer.children) do
---		v.x = v.x - 2 * 1	
---	end
-	
-	--contextMenu3:removeChildren()
-	
---	contextMenu3:addItem("coucou")
-	--contextMenu3:update()
-	
-	--local function dropDownMenuRemoveItem(menu, index)
-	--	table.remove(menu.itemsContainer.children, index)
-	--	menu:update()
-	--	return menu
-	--end
-
 local mainLoop = function()
 	thread.create(function()
 		local offOn
@@ -448,6 +479,56 @@ local mainLoop = function()
 					
 					applyChanges(block, side, origValue, newValue, color)
 					d.p("remote_redstone_changed --applyChanges done")
+				elseif order == "remote_var_changed" then
+					d.p("remote_var_changed")
+				
+					local action = p7;
+					if action == "ins" then
+						d.p("ins")
+						local parentVar = p8
+						local varName = p9; 
+						local actualVar = p10
+						local parentNode = aliasNode.getDataNode(WCClient.dataVars, parentVar)
+						local decodedVar = json.decode(actualVar)
+						table.insert(parentNode.children, decodedVar)
+					elseif action == "upd" then
+						d.p("upd")
+						local oldVarName = p8; 
+						local newVarName = p9; local actualVar = p10
+						local parentNode = aliasNode.getParentDataNode(WCClient.dataVars, oldVarName)
+						local i
+						for k, v in ipairs(parentNode.children) do
+							if v.name == oldVarName then	i = k;	break end
+						end
+						table.remove(parentNode.children, i)
+						table.insert(parentNode.children, i, json.decode(actualVar))
+					elseif action == "del" then
+						d.p("del")
+						local varName = p8; 
+						local parentNode = aliasNode.getParentDataNode(WCClient.dataVars, varName)
+						for k, v in ipairs(parentNode.children) do
+							if v.name == varName then table.remove(parentNode.children, k); break	end
+						end
+					elseif action == "updown" then
+						d.p("updown")
+						local parentVarName = p8
+						local index = p9
+						local upDown = p10
+						local parentVar = aliasNode.getDataNode(WCClient.dataVars, parentVarName)
+						if upDown then
+							local selectedVar = parentVar.children[index]
+							table.remove(parentVar.children, index)
+							table.insert(parentVar.children, index + 1, selectedVar)
+						else
+							local varToBeSwapped = parentVar.children[index - 1]
+							table.remove(parentVar.children, index - 1)
+							table.insert(parentVar.children, index, varToBeSwapped)
+						end
+					end
+					applyChangesVarsList()
+					d.p("remote_var_changed --applyChangesVarList done")
+				
+				
 				elseif order == "remote_order_changed" then
 					d.p("remote_order_changed")
 					local action = p7; local orderName = p8; 
@@ -567,6 +648,22 @@ local getServerDataOrders = function()
 	end
 end
 
+local getServerVars = function()
+	serialization = require "serialization"
+	modem.send(srvAddress, port, "GVars")
+	while true do
+		a1, a2, a3, a4, a5, order, srvData, a8, a9 = event.pull("modem_message")
+		if order == "GVars" then 
+			WCClient.dataVars = serialization.unserialize(srvData)
+			WCClient.dataVarsList = serialization.unserialize(a8)
+			d.p(d.dmp(WCClient.dataVars))
+			d.p(d.dmp(WCClient.dataVarsList))
+			--need some variables setted to nil
+			break
+		end
+	end
+end
+
 local getServerAliases = function()
 	serialization = require "serialization"
 	modem.send(srvAddress, port, "GAliases")
@@ -604,8 +701,6 @@ local connect = function()
 	end
 end
 
-
-
 local loadConfig = function()
 	settings = loadJsonData("/home/wincraft/client/"..settingFile, json)
 	if settings.debug then d.setLogOn(true) end
@@ -628,6 +723,8 @@ local start = function()
 	d.p("* Server dataOrders received")
 	getServerAliases()
 	d.p("* Server aliases received")
+	getServerVars()
+	d.p("* Server vars received")
 	getWindowsLocked()
 	d.p("* Server dataWindowsLocked received")
 	mainLoop()

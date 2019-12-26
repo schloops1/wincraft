@@ -2,12 +2,9 @@ local OrdersModif = {}
 local colors = require "colors"
 local sides = require "sides"
 local dmp = require "dump"
---local t = require "tableTools"
 
 local client
 local name
-
---local memory = {}
 
 function OrdersModif:set(aname)
 	client = self; name = aname
@@ -321,7 +318,7 @@ displayOrderItemCRUD = function(id, action, typeValue)
 		if order ~= nil then timeField.text = order.time end
 		
 	elseif typeField.selectedItem == 5 or typeField.selectedItem == 6 then --execOrder, killOrder
-		orderNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 10, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+		orderNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 20, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
 		local tkeys = {}; for k in pairs(client.dataOrders) do table.insert(tkeys, k) end; table.sort(tkeys)
  		local i = 1; local iSelected = 0
  		for _, k in ipairs (tkeys) do
