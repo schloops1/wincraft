@@ -33,6 +33,7 @@ local timeField
 local aliasField
 local orderNameField
 local outputNameField
+local varNameField
 local appliNameToBeSelected = nil
 
 local isNew = function(name)
@@ -78,9 +79,9 @@ createAppliFile = function()
 	astring = astring.."local name, client "
 	astring = astring.."function "..appli.name..":set(aname) client = self; name = aname end "
 	astring = astring..appli.name..".display = function() "
-	astring = astring.."local window = client.application:addChild(client.GUI.titledWindow(50, 22, 32, "..(appli.vsize + 4)..", name, true)) "
+	astring = astring.."local window = client.application:addChild(client.GUI.titledWindow(50, 22, 42, "..(appli.vsize + 4)..", name, true)) "
 	astring = astring.."window.actionButtons.close.onTouch = function() client.closeWindow(name) end "
-	astring = astring.."local container = window:addChild(client.GUI.container(2, 2, 30, "..appli.vsize..")); "
+	astring = astring.."local container = window:addChild(client.GUI.container(2, 2, 40, "..appli.vsize..")); "
 	--astring = astring.."container.passScreenEvents = false; container.fromItem = 1; "
 	--astring = astring.."container.eventHandler = scrollEventHandler
 	
@@ -115,6 +116,26 @@ createAppliFile = function()
 				astring = astring.."ctrl"..k..".y = "..k*appli.interval.."; ctrl"..k..".x = "..xCtrl.." ; "
 				astring = astring.."container:addChild(ctrl"..k.."); "
 			end
+			
+		elseif v["type"] == "variable" then
+			astring = astring.."container:addChild(client.GUI.text(2, "..k*appli.interval..", 0x999999, '"..v.var.."')); "
+			astring = astring.."local ctrl"..k.." = client.addSynchVarTxt('"..appli.name.."', '"..v.var.."'); "
+			
+			astring = astring.."ctrl"..k..".y = "..k*appli.interval.."; ctrl"..k..".x = "..xCtrl.."; "
+			astring = astring.."container:addChild(ctrl"..k.."); "	
+
+		elseif v["type"] == "updVar" then
+			astring = astring.."container:addChild(client.GUI.text(2, "..k*appli.interval..", 0x999999, '"..v.var.."')); "
+			
+			astring = astring.."local ctrl"..k.." = client.addSynchVarEditable('"..appli.name.."', '"..v.var.."'); "
+			astring = astring.."ctrl"..k..".y = "..k*appli.interval.."; ctrl"..k..".x = "..xCtrl.."; "
+			astring = astring.."container:addChild(ctrl"..k.."); "	
+
+			astring = astring.."local ctrlb"..k.." = client.addSynchVarTxtButton('"..appli.name.."', '"..v.var.."', ctrl"..k.."); "
+
+			astring = astring.."ctrlb"..k..".y = "..k*appli.interval.."; ctrlb"..k..".x = "..(xCtrl + 18).."; "
+			astring = astring.."container:addChild(ctrlb"..k.."); "	
+		
 		end
 	end
 	astring = astring.."return window end ".."return "..appli.name
@@ -193,6 +214,12 @@ insertAppliItem = function()
 	elseif appliItem["type"] == "display" then
 		
 	elseif appliItem["type"] == "nothing" then
+	
+	elseif appliItem["type"] == "variable" then
+		appliItem["var"] = varField:getItem(varField.selectedItem).text
+		
+	elseif appliItem["type"] == "updVar" then
+		appliItem["var"] = varField:getItem(varField.selectedItem).text
 		
 	end
 
@@ -233,7 +260,13 @@ updateAppliItem = function()
 	elseif appliItem["type"] == "execOrder" then
 		appliItem["name"] = orderNameField:getItem(orderNameField.selectedItem).text	
 	elseif appliItem["type"] == "nothing" then
-		
+	
+	elseif appliItem["type"] == "variable" then
+		appliItem["var"] = varField:getItem(varField.selectedItem).text
+	
+	elseif appliItem["type"] == "updVar" then
+		appliItem["var"] = varField:getItem(varField.selectedItem).text
+
 	end
 	
 	saveData()
@@ -285,6 +318,9 @@ displayAppliItemCRUD = function(id, action, typeValue)
 	typeField:addItem("execOrder").onTouch = function() displayAppliItemCRUD(id, action, "execOrder") end
 	typeField:addItem("display").onTouch = function() displayAppliItemCRUD(id, action, "display") end
 	typeField:addItem("nothing").onTouch = function() displayAppliItemCRUD(id, action, "nothing") end
+	
+	typeField:addItem("variable").onTouch = function() displayAppliItemCRUD(id, action, "variable") end
+	typeField:addItem("updVar").onTouch = function() displayAppliItemCRUD(id, action, "updVar") end
 
 	if (item ~= nil and item["type"] == "output") or (action ~= nil and action == "ins" and typeValue == nil) or (typeValue ~= nil and typeValue == "output") then 
 		typeField.selectedItem = 1
@@ -296,6 +332,13 @@ displayAppliItemCRUD = function(id, action, typeValue)
 		typeField.selectedItem = 4
 	elseif (item ~= nil and item["type"] == "nothing") or (typeValue ~= nil and typeValue == "nothing") then 
 		typeField.selectedItem = 5	
+
+	elseif (item ~= nil and item["type"] == "variable") or (typeValue ~= nil and typeValue == "variable") then 
+		typeField.selectedItem = 6	
+
+	elseif (item ~= nil and item["type"] == "updVar") or (typeValue ~= nil and typeValue == "updVar") then 
+		typeField.selectedItem = 7
+
 	end
 	
 	if typeField.selectedItem == 1 or typeField.selectedItem == 4 then --output, display
@@ -356,7 +399,17 @@ displayAppliItemCRUD = function(id, action, typeValue)
 		end
 		if iSelected ~= 0 then orderNameField.selectedItem = iSelected else orderNameField.selectedItem = 1 end
 	elseif typeField.selectedItem == 5 then --nothing
-		
+
+	elseif typeField.selectedItem == 6 or typeField.selectedItem == 7 then --variable, updVar
+		varField = containerFields:addChild(client.GUI.comboBox(20, 2, 20, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+		local iiSelected = 1
+		local ii = 1
+		for k, v in pairs(client.dataVarsList) do
+			varField:addItem(k)
+			if item ~= nil and k == item.var then iiSelected = ii end
+			ii = ii + 1
+		end
+		varField.selectedItem = iiSelected
 	end
 	
 	displayAppliCRUDCommands(action)
@@ -389,6 +442,12 @@ local appliSelected = function()
 			astring = astring.." D "
 		elseif v["type"] == "nothing" then
 			astring = astring.." N "
+		elseif v["type"] == "variable" then
+			astring = astring.." V "..v.var	
+		
+		elseif v["type"] == "updVar" then
+			astring = astring.." UV "..v.var	
+			
 		end			
 	
 		appliItemList:addItem(astring).onTouch = cleanCRUDFields

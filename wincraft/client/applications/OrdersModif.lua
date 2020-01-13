@@ -250,10 +250,8 @@ displayOrderItemCRUD = function(id, action, typeValue)
 
 	if (order ~= nil and order["type"] == "output") or (action ~= nil and action == "ins" and typeValue == nil) or (typeValue ~= nil and typeValue == "output") then 
 		typeField.selectedItem = 1
-	
 	elseif (order ~= nil and order["type"] == "outAlias") or (typeValue ~= nil and typeValue == "outAlias") then 
 		typeField.selectedItem = 2
-	
 	elseif (order ~= nil and order["type"] == "wait") or (typeValue ~= nil and typeValue == "wait") then 
 		typeField.selectedItem = 3
 	elseif (order ~= nil and order["type"] == "input") or (typeValue ~= nil and typeValue == "input") then 
@@ -263,13 +261,11 @@ displayOrderItemCRUD = function(id, action, typeValue)
 	elseif (order ~= nil and order["type"] == "killOrder") or (typeValue ~= nil and typeValue == "killOrder") then 
 		typeField.selectedItem = 6
 	elseif (order ~= nil and order["type"] == "cleanOut") or (typeValue ~= nil and typeValue == "cleanOut") then 
-		typeField.selectedItem = 7	
-		
+		typeField.selectedItem = 7
 	elseif (order ~= nil and order["type"] == "cleanOAl") or (typeValue ~= nil and typeValue == "cleanOAl") then 
-		typeField.selectedItem = 8			
-		
+		typeField.selectedItem = 8
 	elseif (order ~= nil and order["type"] == "cleanW") or (typeValue ~= nil and typeValue == "cleanW") then 
-		typeField.selectedItem = 9	
+		typeField.selectedItem = 9
 	end
 	
 	if typeField.selectedItem == 1 or typeField.selectedItem == 4 or typeField.selectedItem == 7 then --output, input, cleanOut

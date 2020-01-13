@@ -23,7 +23,7 @@ local function cleanUp()
 	containerCRUD:removeChildren()
 	typeField = nil
 	valueField = nil
-	--client.stopListeningToWindowWires(name)
+	client.stopListeningToWindowVars(name)
 end
 
 local function upDownVar(upDown)
@@ -66,8 +66,7 @@ local function validateFields(isNode)
 	nameField.text = string.gsub(nameField.text, '%W','')
 	if nameField.text == "" then return end
 	if string.len(nameField.text) > 16 then nameField.text = string.sub(nameField.text, 1, 16) end
-	if nameField.text ~= oldName.text and client.dataVarsList[nameField.text] ~= nil then return end
-
+	if nameField.text ~= oldName and client.dataVarsList[nameField.text] ~= nil then return end
 	if typeField ~= nil and not isNode then
 		local selectedType = typeField:getItem(typeField.selectedItem).text
 		if selectedType == "Number" then
@@ -85,9 +84,7 @@ end
 local function updateVar()
 	--if oldName ~= nameField.text and not aliasNode.isNew(tree.dataNode, nameField.text) then return end
 	local origVar = tree.getDataNode(tree.dataNode, tree:getSelectedName())
-
 	if not validateFields(origVar.node) then return end
-
 	local var = {}
 	var.name = nameField.text
 	var.node = origVar.node
@@ -170,6 +167,10 @@ end
 local function displayCRUD(var, aType)
 	if aType ~= nil then dmp.p("aType "..aType) end
 
+	--if var ~= nil then var = client.dataVarsList[var] end
+
+	if var == nil then client.GUI.alert("var est nul") end
+
 	containerCRUD:removeChildren()
 	if not var.node then
 		containerCRUD:addChild(client.GUI.text(2, 2, 0xFFFFFF, "Type:"))
@@ -181,11 +182,9 @@ local function displayCRUD(var, aType)
 		typeField:addItem("Alias").onTouch =   function() var.value = nil; displayCRUD(var, "Alias") end
 		local selected = 1
 		for k, v in pairs (typeField:getChildren()) do 
-			dmp.p("v.text: "..v.text)
 			if (aType ~= nil and aType == v.text) or (aType == nil and var ~= nil and var["type"] == v.text) then selected = k end
 		end
 		typeField.selectedItem = selected
-		dmp.p("selected "..selected)
 		
 		local selectedType = typeField:getItem(typeField.selectedItem).text
 		var["type"] = selectedType
@@ -233,6 +232,16 @@ local function displayCRUD(var, aType)
 		else
 			saveField.selectedItem = 1
 		end
+		
+		local varList = {}
+		varList.name = var.name
+		varList.node = var.node
+		if not var.node then
+			varList["type"] = var["type"]
+			varList.value = var.value
+			varList.saveAlways = var.saveAlways
+		end
+		client.dataVarsList[var.name] = varList
 	end	
 end
 
@@ -255,6 +264,15 @@ end
 local itemSelected = function(e1, e2, e3, e4, e5, e6, e7, e8, e9)
 	cleanUp()
 	local var = tree.getDataNode(tree.dataNode, tree:getSelectedName())
+	--local var = client.dataVarsList[tree:getSelectedName()]
+	
+	--if var == nil then 
+	--	client.GUI.alert("est nil")
+	--else
+	--	client.GUI.alert("est pas nil")
+	--end 
+	
+	
 	displayHEAD(var)
 	displayCRUD(var)
 end

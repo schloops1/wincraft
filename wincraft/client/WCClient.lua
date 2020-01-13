@@ -27,6 +27,8 @@ listenData.ordersWindows = {}
 listenData.aliasesWindows = {}
 listenData.alias = {}
 listenData.alias.windows = {}
+listenData.vars = {}
+listenData.vars.windows = {}
 listenData.varsWindows = {}
 
 WCClient.dataWindowsLocked = {}
@@ -87,6 +89,11 @@ end
 WCClient.updateVar = function(oldVarName, newVarName, var)
 	modem.send(srvAddress, port, "UVar", oldVarName, newVarName, json.encode(var))
 	d.p("updateVar "..oldVarName.. " "..newVarName.." sent")
+end
+
+WCClient.updateVarValue = function(varName, value)
+	modem.send(srvAddress, port, "VVar", varName, value)
+	d.p("updateVarValue "..varName.. " "..tostring(value).." sent")
 end
 
 WCClient.insertVar = function(varParentName, varName, var)
@@ -390,6 +397,71 @@ end
 
 -- ************************************************************************************************************************
 
+
+WCClient.stopListeningToWindowVars = function(windowsName)
+	listenData.vars.windows[windowsName] = nil
+	d.p("stopListeningToWindowVars "..windowsName.." done")
+end
+
+stopListeningToVar = function(windowsName, varName)
+	--not tested -- need removing tostring probably
+	listenData.vars.windows[windowsName][varName] = nil
+	d.p("stopListeningToVar "..windowsName.." "..varName.." done")
+end
+
+
+
+applyChangesVar = function(varName, value)
+	d.p("applyChangesVar "..varName.." "..tostring(value).." done")
+	for k, v in pairs (listenData.vars.windows) do
+		if listenData.vars.windows[k][varName] ~= nil then
+			listenData.vars.windows[k][varName].switch:setState(value)
+			WCClient.application:draw()
+		end
+	end
+end
+
+listenToVar = function(control, windowName, varName)
+	if listenData.vars.windows[windowName] == nil then listenData.vars.windows[windowName] = {}; end
+	if listenData.vars.windows[windowName][varName] == nil then listenData.vars.windows[windowName][varName] = control; end
+	d.p("listenToVar "..windowName.." "..varName)
+	return control
+end
+
+WCClient.addSynchVarTxtButton = function(windowName, varName, control)
+	local btn = WCClient.GUI.button(1, 1, 5, 1, 0xFFEFFF, 0x555555, 0x880000, 0xFFFFFF, "Upd")
+	btn.onTouch = function() WCClient.updateVarValue(varName, control.text) end
+	return btn
+end
+
+WCClient.addSynchVarEditable = function(windowName, varName)
+	local object-- = {}
+	
+	local varType = WCClient.dataVarsList[varName]["type"]
+	local value = WCClient.dataVarsList[varName]["value"]
+	if varType == "String" or varType == "Number" then
+		object = WCClient.GUI.input(1, 1, 16, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", value)
+		object.switch = {}
+		object.switch.setState = function(self, value) object.text = value end
+	else
+		
+		
+	end
+	listenToVar(object, windowName, varName)
+	return object
+end
+
+WCClient.addSynchVarTxt = function(windowName, varName)
+	local value = WCClient.dataVarsList[varName].value
+	local txtField = WCClient.GUI.text(1, 1, 0xFFFFFF, tostring(value))
+	txtField.switch = {}
+	txtField.switch.setState = function(self, value) txtField.text = tostring(value) end
+	listenToVar(txtField, windowName, varName)
+	return txtField
+end
+
+-- ************************************************************************************************************************
+
 WCClient.insertCustomMenu = function(name)
 	settings.windows[name] = {};settings.windows[name].opened = false; settings.windows[name].lockable = false; settings.windows[name].control = ""
 	customApplis = loadJsonData("/home/wincraft/client/applications/dataApplis.json", json)
@@ -434,10 +506,27 @@ local display = function()
 			term = require "term"; term.clear(); WCClient.application:stop(); os.exit(); 
 	end
 	local contextMenu2 = menu:addContextMenu("Application")
-	for k, v in pairs (settings.windows) do	
-		contextMenu2:addItem(k).onTouch = function() openWindow(k) end
-		d.p("added window: "..k)
+	
+	--local tkeys = {}
+	--for k in pairs(settings.windows) do table.insert(tkeys, k) end
+	--table.sort(tkeys)
+	--table.sort(settings.windows, function(a,b) return a.order < b.order end)
+	local sorted = {}
+	for k, v in pairs(settings.windows) do
+	    table.insert(sorted,{k,v})
 	end
+	table.sort(sorted, function(a,b) return a[2].order < b[2].order end)
+	
+	for k, v in ipairs(sorted) do
+	    contextMenu2:addItem(v[1]).onTouch = function() openWindow(v[1]) end
+	    d.p("added window: "..k)
+	end
+	
+--	for k, v in ipairs (settings.windows) do
+--	for k, v in pairs (settings.windows) do	
+		--contextMenu2:addItem(k).onTouch = function() openWindow(k) end
+--		d.p("added window: "..k)
+--	end
 	
 	local contextMenu3 = menu:addContextMenu("Locks")
 	contextMenu3:addItem("Unlock OrdersModif Window").onTouch = function() WCClient.lockWindow("OrdersModif", false) end
@@ -479,6 +568,13 @@ local mainLoop = function()
 					
 					applyChanges(block, side, origValue, newValue, color)
 					d.p("remote_redstone_changed --applyChanges done")
+				elseif order == "remote_var_val_changed" then
+					--p7 varName - p8 value
+					WCClient.dataVarsList[p7] = p8
+					
+					d.p("remote_var_val_changed")
+					applyChangesVar(p7, p8)
+
 				elseif order == "remote_var_changed" then
 					d.p("remote_var_changed")
 				
@@ -491,6 +587,7 @@ local mainLoop = function()
 						local parentNode = aliasNode.getDataNode(WCClient.dataVars, parentVar)
 						local decodedVar = json.decode(actualVar)
 						table.insert(parentNode.children, decodedVar)
+						WCClient.dataVarsList[varName] = actualVar
 					elseif action == "upd" then
 						d.p("upd")
 						local oldVarName = p8; 
@@ -502,6 +599,9 @@ local mainLoop = function()
 						end
 						table.remove(parentNode.children, i)
 						table.insert(parentNode.children, i, json.decode(actualVar))
+						
+						WCClient.dataVarsList[oldVarName] = nil
+						WCClient.dataVarsList[newVarName] = json.decode(actualVar)
 					elseif action == "del" then
 						d.p("del")
 						local varName = p8; 
@@ -509,6 +609,7 @@ local mainLoop = function()
 						for k, v in ipairs(parentNode.children) do
 							if v.name == varName then table.remove(parentNode.children, k); break	end
 						end
+						WCClient.dataVarsList[varName] = nil
 					elseif action == "updown" then
 						d.p("updown")
 						local parentVarName = p8
@@ -527,8 +628,8 @@ local mainLoop = function()
 					end
 					applyChangesVarsList()
 					d.p("remote_var_changed --applyChangesVarList done")
-				
-				
+					
+					--varName, value
 				elseif order == "remote_order_changed" then
 					d.p("remote_order_changed")
 					local action = p7; local orderName = p8; 
@@ -705,8 +806,6 @@ local loadConfig = function()
 	settings = loadJsonData("/home/wincraft/client/"..settingFile, json)
 	if settings.debug then d.setLogOn(true) end
 	customApplis = loadJsonData("/home/wincraft/client/applications/dataApplis.json", json)
-	--settings = json.decode(io.open("/home/wincraft/client/"..settingFile, "r"):read("*all"))
-	--customApplis = json.decode(io.open("/home/wincraft/client/applications/dataApplis.json", "r"):read("*all"))
 	port = settings.port
 end
 

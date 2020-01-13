@@ -50,21 +50,21 @@ local loadVariables = function()
 	end
 end
 
-local saveVariables = function()
-	local f=io.open("./wincraft/server/variables/dataVariables.json","w")
-	f:write(json.encode(dataVariables))
-	f:close()
+--local saveVariables = function()
+--	local f=io.open("./wincraft/server/variables/dataVariables.json","w")
+--	f:write(json.encode(dataVariables))
+--	f:close()
 	
-	f=io.open("./wincraft/server/variables/dataVariablesList.json","w")
-	f:write(json.encode(dataVariablesList))
-	f:close()
-end
+--	f=io.open("./wincraft/server/variables/dataVariablesList.json","w")
+--	f:write(json.encode(dataVariablesList))
+--	f:close()
+--end
 
-local saveVariable = function(fileName)
-	local f=io.open("./wincraft/server/variables/"..fileName..".json","w")
-	f:write(json.encode(dataVariablesList[fileName]).value)
-	f:close()
-end
+--local saveVariable = function(fileName)
+--	local f=io.open("./wincraft/server/variables/"..fileName..".json","w")
+--	f:write(json.encode(dataVariablesList[fileName]).value)
+--	f:close()
+--end
 
 local saveOrder = function(fileName, data)
 	local f = io.open("./wincraft/server/orders/"..fileName..".lua","w")
@@ -336,22 +336,44 @@ local udVar = function(eventType,dest,src,aport,strength,order, parentVarName, i
 	mo.broadcast(port, "remote_var_changed", "updown", parentVarName, index, upDown)
 end
 
+local vVar = function(eventType,dest,src,aport,strength,order, varName, newValue)
+	--save value
+	dataVariablesList[varName].value = newValue
+	--should save in one file per variable?
+	
+	print("************")
+	
+	mo.broadcast(port, "remote_var_val_changed", varName, newValue)
+end
+
 local uVar = function(eventType,dest,src,aport,strength,order, oldVarName, newVarName, actualVar)
 	local parentNode = aliasNode.getParentDataNode(dataVariables, oldVarName)
 	local i
 	for k, v in ipairs(parentNode.children) do
-		if v.name == oldVarName then i = k; break	end
+		if v.name == oldVarName then i = k; break end
 	end
 	table.remove(parentNode.children, i)
 	table.insert(parentNode.children, i, json.decode(actualVar))
 	saveJsonData("dataVariables.json", dataVariables)
+	
+	dataVariablesList[oldVarName] = nil
+	dataVariablesList[newVarName] = json.decode(actualVar)
+	saveJsonData("dataVariablesList.json", dataVariablesList)
+	
 	mo.broadcast(port, "remote_var_changed", "upd", oldVarName, newVarName, actualVar)
+	
+	vVar(_, _, _, _, _, _, newVarName, dataVariablesList[newVarName].value)
 end
 
 local iVar = function(eventType,dest,src,aport,strength,order, varParentName, varName, actualVar)
 	local varParent = aliasNode.getDataNode(dataVariables, varParentName)
+
 	table.insert(varParent.children, json.decode(actualVar))
 	saveJsonData("dataVariables.json", dataVariables)
+	
+	dataVariablesList[varName] = json.decode(actualVar)
+	saveJsonData("dataVariablesList.json", dataVariablesList)
+	
 	mo.broadcast(port, "remote_var_changed", "ins", varParentName, varName, actualVar)---
 end
 
@@ -361,6 +383,10 @@ local dVar = function(eventType,dest,src,aport,strength,order, varName)
 		if v.name == varName then table.remove(parent.children, k); break end
 	end
 	saveJsonData("dataVariables.json", dataVariables)
+	
+	dataVariablesList[varName] = nil
+	saveJsonData("dataVariablesList.json", dataVariablesList)
+	
 	mo.broadcast(port, "remote_var_changed", "del", varName)
 end
 
@@ -463,6 +489,7 @@ WCServer.start = function()
 	orders["UVar"] = uVar
 	orders["DVar"] = dVar
 	orders["UDVar"] = udVar
+	orders["VVar"] = vVar
 	
 	orders["EAlias"] = WCServer.eAlias
 
