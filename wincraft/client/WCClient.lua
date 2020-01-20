@@ -202,6 +202,7 @@ WCClient.closeWindow = function(name)
 	settings.windows[name].control:close()
 	WCClient.stopListeningToWindowWires(name)
 	WCClient.stopListeningToWindowOrders(name)
+	WCClient.stopListeningToWindowVars(name)
 	stopListeningToAliasesList(name)
 	stopListeningToOrdersList(name)
 	settings.windows[name].control = nil
@@ -397,7 +398,6 @@ end
 
 -- ************************************************************************************************************************
 
-
 WCClient.stopListeningToWindowVars = function(windowsName)
 	listenData.vars.windows[windowsName] = nil
 	d.p("stopListeningToWindowVars "..windowsName.." done")
@@ -409,12 +409,17 @@ stopListeningToVar = function(windowsName, varName)
 	d.p("stopListeningToVar "..windowsName.." "..varName.." done")
 end
 
-
-
 applyChangesVar = function(varName, value)
 	d.p("applyChangesVar "..varName.." "..tostring(value).." done")
+	
+	--d.p(d.dmp(listenData.vars.windows))
+	
 	for k, v in pairs (listenData.vars.windows) do
+	d.p("cucou")
 		if listenData.vars.windows[k][varName] ~= nil then
+		
+		d.p("found")
+		
 			listenData.vars.windows[k][varName].switch:setState(value)
 			WCClient.application:draw()
 		end
@@ -428,15 +433,16 @@ listenToVar = function(control, windowName, varName)
 	return control
 end
 
+-- ************************************************************************************************************************
+
 WCClient.addSynchVarTxtButton = function(windowName, varName, control)
 	local btn = WCClient.GUI.button(1, 1, 5, 1, 0xFFEFFF, 0x555555, 0x880000, 0xFFFFFF, "Upd")
-	btn.onTouch = function() WCClient.updateVarValue(varName, control.text) end
+	btn.onTouch = function() WCClient.updateVarValue(varName, control.getValue()) end
 	return btn
 end
 
 WCClient.addSynchVarEditable = function(windowName, varName)
 	local object-- = {}
-	
 	local varType = WCClient.dataVarsList[varName]["type"]
 	local value = WCClient.dataVarsList[varName]["value"]
 	if varType == "String" or varType == "Number" then
@@ -444,8 +450,67 @@ WCClient.addSynchVarEditable = function(windowName, varName)
 		object.switch = {}
 		object.switch.setState = function(self, value) object.text = value end
 	else
+		object = WCClient.GUI.comboBox(1, 1, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888)
+
+		local i = 1; local selected = 1
 		
+		if WCClient.dataVarsList[varName]["type"] == "Order" then
+			for k, v in pairs (WCClient.dataOrders) do 
+				object:addItem(k)
+				if k == WCClient.dataVarsList[varName].value then selected = i end
+				i = i + 1
+			end
+			object.selectedItem = selected
+		elseif WCClient.dataVarsList[varName]["type"] == "Alias" then
+			local aliases = {}
+			aliasNode.getAllAliases(WCClient.dataAliases, aliases)
+			for k, v in pairs (aliases) do 
+				object:addItem(v)
+				if v == WCClient.dataVarsList[varName].value then selected = i end
+				i = i + 1
+			end
+			object.selectedItem = selected
+		elseif WCClient.dataVarsList[varName]["type"] == "Boolean" then
+			object:addItem("false")
+			object:addItem("true")
+			if WCClient.dataVarsList[varName].value == true then object.selectedItem = 2 else object.selectedItem = 1 end	
+		end		
+			
+		object.switch = {}
+		object.switch.setState = function(self, value) 
+			local ii = 1
+			local iSelected = 1
+			if WCClient.dataVarsList[varName]["type"] == "Order" then
+				for k, v in pairs (WCClient.dataOrders) do 
+					if k == WCClient.dataVarsList[varName].value then iSelected = ii end
+					ii = ii + 1
+				end
+				object.selectedItem = iSelected
+				--draw?
+			elseif WCClient.dataVarsList[varName]["type"] == "Alias" then
+				local aliases = {}
+				aliasNode.getAllAliases(WCClient.dataAliases, aliases)
+				for k, v in pairs (aliases) do 
+					if v == WCClient.dataVarsList[varName].value then iSelected = ii end
+					ii = ii + 1
+				end
+				object.selectedItem = iSelected
+			elseif WCClient.dataVarsList[varName]["type"] == "Boolean" then
+				if value == true then object.selectedItem = 2 else object.selectedItem = 1 end	
+			end
+		end
+	end
+	object.getValue = function(self)
+		if varType == "String" or varType == "Number" then
+			return object.text
+		elseif varType == "Boolean" then
 		
+			--d.p("object.selectedITem: "..self.selectedItem)
+		
+			if object.selectedItem == 2 then return true else return false end
+		else
+			return object:getItem(object.selectedItem).text
+		end
 	end
 	listenToVar(object, windowName, varName)
 	return object
@@ -570,7 +635,7 @@ local mainLoop = function()
 					d.p("remote_redstone_changed --applyChanges done")
 				elseif order == "remote_var_val_changed" then
 					--p7 varName - p8 value
-					WCClient.dataVarsList[p7] = p8
+					WCClient.dataVarsList[p7].value = p8
 					
 					d.p("remote_var_val_changed")
 					applyChangesVar(p7, p8)
@@ -602,6 +667,13 @@ local mainLoop = function()
 						
 						WCClient.dataVarsList[oldVarName] = nil
 						WCClient.dataVarsList[newVarName] = json.decode(actualVar)
+						
+						d.p("coucou")
+						d.p(d.dmp(WCClient.dataVars))
+						d.p(d.dmp(WCClient.dataVarsList))
+						
+						
+						
 					elseif action == "del" then
 						d.p("del")
 						local varName = p8; 

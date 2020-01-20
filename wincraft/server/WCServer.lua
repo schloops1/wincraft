@@ -38,16 +38,54 @@ local saveJsonData = function(fileName, data)
 	f:close()
 end
 
+local updateVariableFromSave = function(varName)
+	local fs = require("filesystem")
+	if fs.exists("/home/wincraft/server/variables/"..varName) then
+		local f = io.open("./wincraft/server/variables/"..varName, "r")
+		local data = f:read("*all")
+		f:close()
+		local aType = dataVariablesList[varName]["type"]
+		if aType == "String" or aType == "Order" or aType == "Alias" then
+			dataVariablesList[varName].value = data --tostring(data)
+		elseif aType == "Number" then
+			dataVariablesList[varName].value = tonumber(data)
+		elseif aType == "Boolean" then
+			if data == "true" then
+				dataVariablesList[varName].value = true
+			else
+				dataVariablesList[varName].value = false
+			end
+		end
+		fs.remove("/home/wincraft/server/variables/"..varName)
+	end
+end
+
 local loadVariables = function()
 	local fs = require("filesystem")
 	dataVariables = loadJsonData("dataVariables.json")
 	dataVariablesList = loadJsonData("dataVariablesList.json")
 
-	for fileName in fs.list("/home/wincraft/server/variables") do
-		local f = io.open("./wincraft/server/variables/"..fileName, "r")  	
-	  	dataVariablesList[fileName].value = f:read("*all") --json.decode(f:read("*all") )
-	  	f:close()
+	--for fileName in fs.list("/home/wincraft/server/variables") do
+	--	local f = io.open("./wincraft/server/variables/"..fileName, "r")  	
+	--  	dataVariablesList[fileName].value = f:read("*all") --json.decode(f:read("*all") )
+	--  	f:close()
+	--end
+	for k, _ in pairs (dataVariablesList) do
+		updateVariableFromSave(k)
 	end
+end
+
+--local loadVariable = function(fileName)
+--	local f = io.open("./wincraft/server/variables/"..fileName, "r")
+--	local data = f:read("*all")
+--	f:close()
+--	return data
+--end
+
+local saveVariable = function(fileName, data)
+	local f=io.open("./wincraft/server/variables/"..fileName,"w")
+	f:write(tostring(data))
+	f:close()
 end
 
 --local saveVariables = function()
@@ -337,12 +375,10 @@ local udVar = function(eventType,dest,src,aport,strength,order, parentVarName, i
 end
 
 local vVar = function(eventType,dest,src,aport,strength,order, varName, newValue)
-	--save value
 	dataVariablesList[varName].value = newValue
-	--should save in one file per variable?
-	
-	print("************")
-	
+	if dataVariablesList[varName].saveAlways == true then
+		saveVariable(varName, newValue)
+	end
 	mo.broadcast(port, "remote_var_val_changed", varName, newValue)
 end
 

@@ -167,81 +167,43 @@ end
 local function displayCRUD(var, aType)
 	if aType ~= nil then dmp.p("aType "..aType) end
 
-	--if var ~= nil then var = client.dataVarsList[var] end
-
 	if var == nil then client.GUI.alert("var est nul") end
 
+	local var2 = client.dataVarsList[var.name] 
+
 	containerCRUD:removeChildren()
-	if not var.node then
+	if not var2.node then
 		containerCRUD:addChild(client.GUI.text(2, 2, 0xFFFFFF, "Type:"))
 		typeField = containerCRUD:addChild(client.GUI.comboBox(8, 2, 10, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
-		typeField:addItem("Number").onTouch =  function() var.value = 0; displayCRUD(var, "Number") end
-		typeField:addItem("String").onTouch =  function() var.value = ""; displayCRUD(var, "String") end
-		typeField:addItem("Boolean").onTouch = function() var.value = "false"; displayCRUD(var, "Boolean") end
-		typeField:addItem("Order").onTouch =   function() var.value = nil; displayCRUD(var, "Order") end
-		typeField:addItem("Alias").onTouch =   function() var.value = nil; displayCRUD(var, "Alias") end
+		typeField:addItem("Number").onTouch =  function() var2.value = 0; displayCRUD(var2, "Number") end
+		typeField:addItem("String").onTouch =  function() var2.value = ""; displayCRUD(var2, "String") end
+		typeField:addItem("Boolean").onTouch = function() var2.value = "false"; displayCRUD(var2, "Boolean") end
+		typeField:addItem("Order").onTouch =   function() var2.value = nil; displayCRUD(var2, "Order") end
+		typeField:addItem("Alias").onTouch =   function() var2.value = nil; displayCRUD(var2, "Alias") end
 		local selected = 1
 		for k, v in pairs (typeField:getChildren()) do 
-			if (aType ~= nil and aType == v.text) or (aType == nil and var ~= nil and var["type"] == v.text) then selected = k end
+			if (aType ~= nil and aType == v.text) or (aType == nil and var2 ~= nil and var2["type"] == v.text) then selected = k end
 		end
 		typeField.selectedItem = selected
 		
 		local selectedType = typeField:getItem(typeField.selectedItem).text
-		var["type"] = selectedType
+		var2["type"] = selectedType
 		
-		if selectedType == "Number" or selectedType == "String" then
-			valueField = containerCRUD:addChild(client.GUI.input(20, 2, 16, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", ""))
-			if var ~= nil then valueField.text = var.value end
-		elseif selectedType == "Boolean" then	
-			valueField = containerCRUD:addChild(client.GUI.comboBox(20, 2, 10, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
-			valueField:addItem("false")
-			valueField:addItem("true")
-			if var ~= nil and var.value == true then valueField.selectedItem = 2 else valueField.selectedItem = 1 end
-		elseif selectedType == "Order" then
-			valueField = containerCRUD:addChild(client.GUI.comboBox(20, 2, 20, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
-			--if #client.dataOrders > 0 then
-				local ii = 1
-				local selectedOrder = 1
-				for k, v in pairs (client.dataOrders) do
-					valueField:addItem(k)
-					if var ~= nil and var.value == k then
-						selectedOrder = ii
-					end
-					ii = ii + 1
-				end
-				valueField.selectedItem = selectedOrder
-			--end
-		elseif selectedType == "Alias" then
-			valueField = containerCRUD:addChild(client.GUI.comboBox(20, 2, 20, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
-			local aliases = {}
-			aliasNode.getAllAliases(client.dataAliases, aliases)
-			for k, v in pairs (aliases) do
-				valueField:addItem(v)
-				if var ~= nil and var.value == v then
-					valueField.selectedItem = k
-				end
-			end
-		end
+		valueField = client.addSynchVarEditable(name, var.name)
+		valueField.x = 20; valueField.y = 2; valueField.width = 20; --valueField.height = 1;
+		containerCRUD:addChild(valueField)
 
 		containerCRUD:addChild(client.GUI.text(2, 4, 0xFFFFFF, "Save:"))
 		saveField = containerCRUD:addChild(client.GUI.comboBox(8, 4, 10, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
 		saveField:addItem("Always")
 		saveField:addItem("OnDemand")
-		if var ~= nil and var.saveAlways == false then
+		if var2 ~= nil and var2.saveAlways == false then
 			saveField.selectedItem = 2
 		else
 			saveField.selectedItem = 1
 		end
 		
-		local varList = {}
-		varList.name = var.name
-		varList.node = var.node
-		if not var.node then
-			varList["type"] = var["type"]
-			varList.value = var.value
-			varList.saveAlways = var.saveAlways
-		end
-		client.dataVarsList[var.name] = varList
+		client.dataVarsList[var2.name] = var2
 	end	
 end
 
@@ -264,14 +226,6 @@ end
 local itemSelected = function(e1, e2, e3, e4, e5, e6, e7, e8, e9)
 	cleanUp()
 	local var = tree.getDataNode(tree.dataNode, tree:getSelectedName())
-	--local var = client.dataVarsList[tree:getSelectedName()]
-	
-	--if var == nil then 
-	--	client.GUI.alert("est nil")
-	--else
-	--	client.GUI.alert("est pas nil")
-	--end 
-	
 	
 	displayHEAD(var)
 	displayCRUD(var)
@@ -281,6 +235,7 @@ local onItemExpanded = function(e1, e2, e3, e4, e5, e6, e7, e8, e9)
 end
 
 local refresh = function()
+	dmp.p("refresh_")
 	tree:refresh()
 	client.application:draw()
 end
@@ -295,6 +250,9 @@ VariablesModif.display = function()
 
 	tree.switch.refresh = refresh
 	client.listenToVarsList(tree, name)
+
+	--for value changes
+	--tree.switch.setState = refresh
 
 	local panelHEAD = window:addChild(client.GUI.panel(32, 2, 42, 5, 0x880000))
 	containerHEAD = window:addChild(client.GUI.container(panelHEAD.x, panelHEAD.y, panelHEAD.width, panelHEAD.height))

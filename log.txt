@@ -1,0 +1,232 @@
+* config loaded
+modem opening was: true
+received server address
+* connected to server
+{ ["3d7320a4-4113-4e35-a80d-3eb8be1ce2e2"] = { [1] = 47,
+[2] = 15,
+[3] = 341,
+[4] = 3,
+[5] = 9,
+[0] = 3,
+} ,
+} 
+* Server data received
+{ ["3d7320a4-4113-4e35-a80d-3eb8be1ce2e2"] = { [1] = 47,
+[2] = 15,
+[3] = 341,
+[4] = 3,
+[5] = 9,
+[0] = 3,
+} ,
+} 
+* Server dataOrders received
+{ ["exp"] = false,
+["node"] = true,
+["name"] = Top,
+["children"] = { [1] = { ["exp"] = false,
+["node"] = true,
+["name"] = lights,
+["children"] = { [1] = { ["node"] = false,
+["side"] = 2,
+["door"] = false,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["name"] = light1,
+["color"] = 0,
+} ,
+[2] = { ["node"] = false,
+["side"] = 2,
+["door"] = false,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["name"] = light2,
+["color"] = 1,
+} ,
+[3] = { ["node"] = false,
+["side"] = 2,
+["door"] = false,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["name"] = light3,
+["color"] = 2,
+} ,
+[4] = { ["node"] = false,
+["side"] = 2,
+["door"] = false,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["name"] = light4,
+["color"] = 3,
+} ,
+} ,
+} ,
+[2] = { ["exp"] = true,
+["node"] = true,
+["name"] = LightsTop,
+["children"] = { [1] = { ["node"] = false,
+["side"] = 3,
+["door"] = false,
+["name"] = tlights1,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["color"] = 0,
+} ,
+[2] = { ["node"] = false,
+["side"] = 3,
+["door"] = false,
+["name"] = tlights2,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["color"] = 1,
+} ,
+[3] = { ["node"] = false,
+["side"] = 3,
+["door"] = false,
+["name"] = tlights3,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["color"] = 2,
+} ,
+[4] = { ["node"] = false,
+["side"] = 3,
+["door"] = false,
+["name"] = tlights4,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["color"] = 3,
+} ,
+[5] = { ["node"] = false,
+["side"] = 3,
+["door"] = false,
+["name"] = tlights5,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["color"] = 4,
+} ,
+[6] = { ["node"] = false,
+["side"] = 3,
+["door"] = false,
+["name"] = tlights6,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["color"] = 5,
+} ,
+[7] = { ["node"] = false,
+["side"] = 3,
+["door"] = false,
+["name"] = tlights7,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["color"] = 6,
+} ,
+[8] = { ["node"] = false,
+["side"] = 3,
+["door"] = false,
+["name"] = tlights8,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["color"] = 7,
+} ,
+[9] = { ["node"] = false,
+["side"] = 3,
+["door"] = false,
+["name"] = tlights9,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["color"] = 8,
+} ,
+} ,
+} ,
+[3] = { ["exp"] = false,
+["node"] = true,
+["name"] = doors,
+["children"] = { [1] = { ["node"] = false,
+["side"] = 2,
+["door"] = true,
+["block"] = 3d7320a4-4113-4e35-a80d-3eb8be1ce2e2,
+["name"] = door1,
+["color"] = 15,
+} ,
+} ,
+} ,
+} ,
+} 
+* Server aliases received
+{ ["name"] = Top,
+["node"] = true,
+["exp"] = false,
+["children"] = { [1] = { ["value"] = 100,
+["name"] = Test,
+["type"] = Number,
+["node"] = false,
+["saveAlways"] = true,
+} ,
+} ,
+} 
+{ ["Top"] = { ["node"] = true,
+["exp"] = false,
+["name"] = Top,
+} ,
+["Test"] = { ["value"] = 10012,
+["name"] = Test,
+["type"] = Number,
+["node"] = false,
+["saveAlways"] = true,
+} ,
+} 
+* Server vars received
+{ ["Orders"] = false,
+["test1"] = false,
+["Generic"] = false,
+["OrdersModif"] = true,
+} 
+* Server dataWindowsLocked received
+* main loop launched
+added window: 1
+added window: 2
+added window: 3
+added window: 4
+added window: 5
+added window: 6
+added window: 7
+added custom window: test
+listenToVarsList VariablesModif done
+listenToVar test Test
+stopListeningToWindowVars VariablesModif done
+listenToVar VariablesModif Test
+updateVarValue Test 44 sent
+modem_message 8dba6c82-cd9d-46cc-8214-97ef4eb583ab bc0d3765-fd96-4c39-9b92-66c584f2f701 1002 0 remote_var_val_changed Test 44 - - -
+modem message received
+remote_var_val_changed
+applyChangesVar Test 44 done
+cucou
+found
+cucou
+found
+updateVar Test Test sent
+stopListeningToWindowVars VariablesModif done
+modem_message 8dba6c82-cd9d-46cc-8214-97ef4eb583ab bc0d3765-fd96-4c39-9b92-66c584f2f701 1002 0 remote_var_changed upd Test Test {"type":"Number","name":"Test","node":false,"value":445,"saveAlways":true} -
+modem message received
+remote_var_changed
+upd
+coucou
+{ ["name"] = Top,
+["node"] = true,
+["exp"] = true,
+["children"] = { [1] = { ["node"] = false,
+["name"] = Test,
+["type"] = Number,
+["value"] = 445,
+["saveAlways"] = true,
+} ,
+} ,
+} 
+{ ["Top"] = { ["node"] = true,
+["exp"] = false,
+["name"] = Top,
+} ,
+["Test"] = { ["node"] = false,
+["name"] = Test,
+["type"] = Number,
+["value"] = 445,
+["saveAlways"] = true,
+} ,
+} 
+refresh_
+applyChangesVarsList done
+remote_var_changed --applyChangesVarList done
+modem_message 8dba6c82-cd9d-46cc-8214-97ef4eb583ab bc0d3765-fd96-4c39-9b92-66c584f2f701 1002 0 remote_var_val_changed Test 445 - - -
+modem message received
+remote_var_val_changed
+applyChangesVar Test 445 done
+cucou
+found
+stopListeningToWindowVars VariablesModif done
+listenToVar VariablesModif Test
