@@ -278,16 +278,23 @@ end
 
 -- ************************************************************************************************************************
 
-WCClient.addSyncRectangle = function(block, side, color, name)
+
+WCClient.addSyncRectangle = function(block, side, color, name, activeColor, passiveColor)
+--WCClient.addSyncRectangle = function(block, side, color, name)
+	if activeColor == nil then activeColor = 0x33FF80 end
+	if passiveColor == nil then passiveColor = 0x333330 end
+
 	local offOn = getOffOn(block, side, color)
 	local object = WCClient.GUI.object(2, 2, 1, 1)
 	object.switch = {}
 	object.switch.setState = function(self, state) offOn = state; end
 	object.draw = function(object)
 		if offOn == true then
-			buffer.drawRectangle(object.x, object.y, object.width, object.height, 0x33FF80, 0x0, " ")
+			--buffer.drawRectangle(object.x, object.y, object.width, object.height, 0x33FF80, 0x0, " ")
+			buffer.drawRectangle(object.x, object.y, object.width, object.height, activeColor, 0x0, " ")
 		else
-			buffer.drawRectangle(object.x, object.y, object.width, object.height, 0x333330, 0x0, " ")
+			--buffer.drawRectangle(object.x, object.y, object.width, object.height, 0x333330, 0x0, " ")
+			buffer.drawRectangle(object.x, object.y, object.width, object.height, passiveColor, 0x0, " ")
 		end
 	end
 	listenToWire(object, name, block, side, color)
@@ -320,9 +327,14 @@ listenToOrder = function(control, windowName, orderName, action)
 	return control
 end
 
-WCClient.addSyncSwitchOrderNoLabel = function(windowName, action, aOrderName)
-	local offOn = WCClient.dataOrders[aOrderName][action]
-    local switch = WCClient.GUI.switch(1, 1, 10, 0x66DB80, 0x1D1D1D, 0xEEEEEE, offOn)
+WCClient.addSyncSwitchOrderNoLabel = function(windowName, action, aOrderName, activeColor, passiveColor, pipeColor)
+--WCClient.addSyncSwitchOrderNoLabel = function(windowName, action, aOrderName)
+    if activeColor == nil then activeColor = 0x66DB80 end
+    if passiveColor == nil then passiveColor = 0x1D1D1D end
+    if pipeColor == nil then pipeColor = 0xEEEEEE end
+    
+    local offOn = WCClient.dataOrders[aOrderName][action]
+    local switch = WCClient.GUI.switch(1, 1, 11, activeColor, passiveColor, pipeColor, offOn)
     switch.onStateChanged = function() switchValueOrder(aOrderName, action, switch.state); switch.onStateChanged2() end
 	switch.onStateChanged2 = function() end
 	listenToOrder(switch, windowName, aOrderName, action)
@@ -378,9 +390,17 @@ listenToWire = function(control, windowsName, block, side, color)
 	return control
 end
 
-WCClient.addSyncSwitchNoLabel = function(block, side, color, name)
-	local offOn = getOffOn(block, side, color)
-    local switch = WCClient.GUI.switch(1, 1, 10, 0x66DB80, 0x1D1D1D, 0xEEEEEE, offOn)--0x999999, 
+
+--WCClient.addSyncSwitchNoLabel = function(block, side, color, name)
+
+
+WCClient.addSyncSwitchNoLabel = function(block, side, color, name, activeColor, passiveColor, pipeColor)
+    if activeColor == nil then activeColor = 0x66DB80 end
+    if passiveColor == nil then passiveColor = 0x1D1D1D end
+    if pipeColor == nil then pipeColor = 0xEEEEEE end
+    
+    local offOn = getOffOn(block, side, color)
+    local switch = WCClient.GUI.switch(1, 1, 11, activeColor, passiveColor, pipeColor, offOn)--0x999999, 
     --local switch = WCClient.GUI.switch(1, 1, 10, 0x2B6FAB, 0x1D1D1D, 0xEEEEEE, offOn)
      --local switch = WCClient.GUI.switch(1, 1, 10, 0x663380, 0x15151D, 0x22EE22, offOn)--0x999999, 
     switch.onStateChanged = function() swithValue(block, side, color) end
@@ -435,8 +455,14 @@ end
 
 -- ************************************************************************************************************************
 
-WCClient.addSynchVarTxtButton = function(windowName, varName, control)
-	local btn = WCClient.GUI.button(1, 1, 5, 1, 0xFFEFFF, 0x555555, 0x880000, 0xFFFFFF, "Upd")
+--WCClient.addSynchVarTxtButton = function(windowName, varName, control)
+WCClient.addSynchVarTxtButton = function(windowName, varName, control, color1, color2, color3, color4)
+	if color1 == nil then color1 = 0xFFEFFF end
+	if color2 == nil then color2 = 0x555555 end
+	if color3 == nil then color3 = 0x880000 end
+	if color4 == nil then color4 = 0xFFFFFF end
+	
+	local btn = WCClient.GUI.button(1, 1, 5, 1, color1, color2, color3, color4, "Upd")
 	btn.onTouch = function() WCClient.updateVarValue(varName, control.getValue()) end
 	return btn
 end
@@ -447,6 +473,7 @@ WCClient.addSynchVarEditable = function(windowName, varName)
 	local value = WCClient.dataVarsList[varName]["value"]
 	if varType == "String" or varType == "Number" then
 		object = WCClient.GUI.input(1, 1, 16, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", value)
+		object.text = value --needed for some reason
 		object.switch = {}
 		object.switch.setState = function(self, value) object.text = value end
 	else
@@ -504,9 +531,6 @@ WCClient.addSynchVarEditable = function(windowName, varName)
 		if varType == "String" or varType == "Number" then
 			return object.text
 		elseif varType == "Boolean" then
-		
-			--d.p("object.selectedITem: "..self.selectedItem)
-		
 			if object.selectedItem == 2 then return true else return false end
 		else
 			return object:getItem(object.selectedItem).text

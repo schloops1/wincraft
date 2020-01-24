@@ -2516,6 +2516,29 @@ end
 
 --------------------------------------------------------------------------------
 
+function GUI.colorChooser(application, opener, colorNbr, originalColor)	
+	local palette = application:addChild(GUI.palette(1, 1, originalColor ))--, object.color))
+	palette.localX, palette.localY = math.floor(application.width / 2 - palette.width / 2), math.floor(application.height / 2 - palette.height / 2)
+
+	palette.cancelButton.onTouch = function()
+		palette:remove()
+		application:draw()
+	end
+
+	palette.submitButton.onTouch = function()
+		if opener.onColorSelected then
+			opener.onColorSelected(colorNbr, palette.color.integer)
+		end
+		palette:remove()
+		application:draw()
+	end
+		
+	application:draw()
+	return palette
+end
+
+--------------------------------------------------------------------------------
+
 local function treeAliasDraw(tree)	
 	local y, yEnd, showScrollBar = tree.y, tree.y + tree.height - 1, #tree.items > tree.height
 	local textLimit = tree.width - (showScrollBar and 1 or 0)
@@ -3755,22 +3778,14 @@ local function listItemEventHandler(application, item, e1, ...)
 		end
 		
 	elseif e1 == "scroll" then
-		--print("e1: "..e1.."e2: "..e2.."e3: "..e3.."e4: "..e4)
-		--GUI.alert("e1: "..e1.." "..arg[1])
 		local arg = {...}
-		--GUI.alert("arg: "..arg[4])
-		--for i,v in ipairs(arg) do
-		--	GUI.alert(i..e1.." "..v)
-		--end
 		
 		if arg[4] == 1 then
---			GUI.alert("==1")
 			if item.parent.fromItem > 1 then
 				item.parent.fromItem = item.parent.fromItem - 1
 				application:draw()
 			end
 		else
---			GUI.alert("~=1")
 			if item.parent.fromItem < #item.parent.children then
 				item.parent.fromItem = item.parent.fromItem + 1
 				application:draw()

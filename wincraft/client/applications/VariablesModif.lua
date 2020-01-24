@@ -237,6 +237,7 @@ end
 local refresh = function()
 	dmp.p("refresh_")
 	tree:refresh()
+	itemSelected()--
 	client.application:draw()
 end
 
