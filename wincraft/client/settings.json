@@ -1,16 +1,48 @@
 {
-  "windows": {
-  	"Generic": {"opened": false, "lockable": false, "order": 1, "control": ""},
-
-  	"Aliases": {"opened": false, "lockable": false, "order": 2, "control": ""},
-	"AliasesModif": {"opened": false, "lockable": false, "order": 3, "control": ""},
-
-  	"VariablesModif": {"opened": false, "lockable": false, "order": 4, "control": ""},
-  	
-  	"Orders": {"opened": false, "lockable": false, "order": 5, "control": ""},
-  	"OrdersModif": {"opened": false, "lockable": true, "order": 6, "control": ""},
-
-  	"ApplicationFactory": {"opened": false, "lockable": false, "order": 7, "control": ""}
-  },
-  "port": 1002, "debug":true
+	"windows": {
+		"Generic": {
+			"opened": false,
+			"lockable": false,
+			"order": 1,
+			"control": ""
+		},
+		"Aliases": {
+			"opened": false,
+			"lockable": false,
+			"order": 2,
+			"control": ""
+		},
+		"AliasesModif": {
+			"opened": false,
+			"lockable": false,
+			"order": 3,
+			"control": ""
+		},
+		"VariablesModif": {
+			"opened": false,
+			"lockable": false,
+			"order": 4,
+			"control": ""
+		},
+		"Orders": {
+			"opened": false,
+			"lockable": false,
+			"order": 5,
+			"control": ""
+		},
+		"OrdersModif": {
+			"opened": false,
+			"lockable": false,
+			"order": 6,
+			"control": ""
+		},
+		"ApplicationFactory": {
+			"opened": false,
+			"lockable": false,
+			"order": 7,
+			"control": ""
+		}
+	},
+	"port": 1002,
+	"debug": true
 }

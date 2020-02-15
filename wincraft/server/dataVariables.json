@@ -1,1 +1,1 @@
-{"exp":false,"name":"Top","children":[{"type":"Number","node":false,"saveAlways":true,"value":100,"name":"Test2"}],"node":true}
+{"node":true,"exp":false,"name":"Top","children":[{"saveAlways":true,"type":"Order","name":"Test2","value":"execVar1","node":false},{"saveAlways":true,"type":"Alias","name":"Test","value":"lights","node":false}]}

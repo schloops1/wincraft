@@ -65,44 +65,16 @@ local loadVariables = function()
 	dataVariables = loadJsonData("dataVariables.json")
 	dataVariablesList = loadJsonData("dataVariablesList.json")
 
-	--for fileName in fs.list("/home/wincraft/server/variables") do
-	--	local f = io.open("./wincraft/server/variables/"..fileName, "r")  	
-	--  	dataVariablesList[fileName].value = f:read("*all") --json.decode(f:read("*all") )
-	--  	f:close()
-	--end
 	for k, _ in pairs (dataVariablesList) do
 		updateVariableFromSave(k)
 	end
 end
-
---local loadVariable = function(fileName)
---	local f = io.open("./wincraft/server/variables/"..fileName, "r")
---	local data = f:read("*all")
---	f:close()
---	return data
---end
 
 local saveVariable = function(fileName, data)
 	local f=io.open("./wincraft/server/variables/"..fileName,"w")
 	f:write(tostring(data))
 	f:close()
 end
-
---local saveVariables = function()
---	local f=io.open("./wincraft/server/variables/dataVariables.json","w")
---	f:write(json.encode(dataVariables))
---	f:close()
-	
---	f=io.open("./wincraft/server/variables/dataVariablesList.json","w")
---	f:write(json.encode(dataVariablesList))
---	f:close()
---end
-
---local saveVariable = function(fileName)
---	local f=io.open("./wincraft/server/variables/"..fileName..".json","w")
---	f:write(json.encode(dataVariablesList[fileName]).value)
---	f:close()
---end
 
 local saveOrder = function(fileName, data)
 	local f = io.open("./wincraft/server/orders/"..fileName..".lua","w")
@@ -249,6 +221,30 @@ local saveOrderExecFile = function(orderName)
 			o = o.." WCServer.eAlias(_, _, _, _, _, _, '"..v.alias.."',"..v['force'].."); "	
 		elseif v["type"] == "cleanOAl" then
 			f = f.." WCServer.execAlias('"..v.alias.."',"..v['force'].."); "		
+
+    elseif v["type"] == "varSet" then
+      o = o.." WCServer.vVarExec('"..v.name.."', '".. tostring(v.value).."', '"
+      local mod
+      if v.mod == nil then o = o.."'); " else o = o..v.mod.."'); " end
+		
+		elseif v["type"] == "execVAl" then
+--		  o = o.." WCServer.eAlias(_, _, _, _, _, _, '"..dataVariablesList[v.name].value.."',"..v['force'].."); "
+		  o = o.." WCServer.eAlias(_, _, _, _, _, _, WCServer.getVarValue('"..v.name.."'),"..v['force'].."); "
+		  
+    elseif v["type"] == "execVOr" then
+--      o = o.." WCServer.eOrder(_, _, _, _, _, _, '"..dataVariablesList[v.name].value.."', 'offOn', true); "
+      o = o.." WCServer.eOrder(_, _, _, _, _, _, WCServer.getVarValue('"..v.name.."'), 'offOn', true); "
+		
+    elseif v["type"] == "trigVar" then
+      o = o.." event.push('trigVar', '"..v.name.."'); "
+
+    elseif v["type"] == "inpVar" then
+      o = o.." while true do "
+      o = o.."  eventType,varName = event.pull(); "
+      o = o.."  if eventType == 'trigVar' then "
+      o = o.."   if varName == '"..v.name.."' then break end "
+      o = o.."  end "
+      o = o.." end "
 		end
 	end
 	if dataOrders[orderName]["repeat"] ~= "0" then o = o.." end " end
@@ -257,6 +253,10 @@ local saveOrderExecFile = function(orderName)
 	o = o.." os.sleep(1); WCServer.threadEnded('"..orderName.."') end) end " 
 	
 	saveOrder(orderName, i..ff..o.."return "..orderName)
+end
+
+WCServer.getVarValue = function(aname)
+  if dataVariablesList[aname] ~= nil then return dataVariablesList[aname].value else return nil end 
 end
 
 local function openCloseDoor(node, open)
@@ -380,6 +380,35 @@ local vVar = function(eventType,dest,src,aport,strength,order, varName, newValue
 		saveVariable(varName, newValue)
 	end
 	mo.broadcast(port, "remote_var_val_changed", varName, newValue)
+end
+
+WCServer.vVarExec = function(aname, avalue, amod)
+  local var = dataVariablesList[aname]
+  local varType = var["type"]
+  local value
+  if  varType == "Number" then
+    avalue = tonumber(avalue)
+    if amod == "equal" then
+      value = avalue
+    elseif amod == "increment" then
+      value = var.value + avalue
+    else
+      value = avalue - amod
+    end
+  else
+    if varType == "Boolean" then 
+      if avalue == "true" then
+        value = true
+      else
+        value = false
+      end
+    else 
+      value = avalue
+    end
+  end
+    
+  vVar(_, _, _, _, _, _, aname, value)
+  
 end
 
 local uVar = function(eventType,dest,src,aport,strength,order, oldVarName, newVarName, actualVar)

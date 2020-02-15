@@ -28,6 +28,11 @@ local forceField
 local timeField
 local aliasField
 local orderNameField
+
+local varValueField
+local varModField
+local varNameField
+      
 local orderNameToBeSelected = nil
 
 cleanFields = function()
@@ -119,18 +124,47 @@ insertOrderItem = function()
 		orderItem["side"] = sideField.selectedItem - 1
 		orderItem["color"] = colorField.selectedItem - 1
 		orderItem["force"] = forceField.text
-
 	elseif orderItem["type"] == "outAlias" or orderItem["type"] == "cleanOAl" then	
 		if tonumber(forceField.text) == nil then return end
 		if tonumber(forceField.text) > 255 then forceField.text = "255" end
 		orderItem["alias"] = aliasField:getItem(aliasField.selectedItem).text
 		orderItem["force"] = forceField.text
-
 	elseif orderItem["type"] == "wait" or orderItem["type"] == "cleanW" then
 		if tonumber(timeField.text) == nil then return end
 		orderItem["time"] = timeField.text
 	elseif orderItem["type"] == "execOrder" or orderItem["type"] == "killOrder" then
 		orderItem["name"] = orderNameField:getItem(orderNameField.selectedItem).text
+
+  elseif orderItem["type"] == "varSet" then
+    --orderItem["typeVar"] = varTypeField:getItem(varTypeField.selectedItem).text
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+    local typeVar = client.dataVarsList[orderItem["name"]]["type"]
+        
+    if typeVar == "String" then
+      orderItem["value"] = varValueField.text
+    elseif typeVar == "Number" then
+      orderItem["mod"] = varModField:getItem(varModField.selectedItem).text
+      orderItem["value"] = tonumber(varValueField.text)
+    elseif typeVar == "Boolean" then 
+      if varValueField.selectedItem == 1 then orderItem["value"] = false else orderItem["value"] = true end
+    elseif typeVar == "Alias" then
+      orderItem["value"] = varValueField:getItem(varValueField.selectedItem).text
+    elseif typeVar == "Order" then
+      orderItem["value"] = varValueField:getItem(varValueField.selectedItem).text
+    end
+		
+  elseif orderItem["type"] == "execVAl" then
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+    orderItem["force"] = tonumber(forceField.text)
+  elseif orderItem["type"] == "execVOr" then
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+
+  elseif orderItem["type"] == "trigVar" then
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+
+  elseif orderItem["type"] == "inpVar" then
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+		
 	end
 	local orders = client.dataOrders[oldOrderName.text].orders
 	for k, v in ipairs(orders) do
@@ -166,11 +200,42 @@ updateOrderItem = function()
 		if tonumber(timeField.text) == nil then return end
 		orderItem["time"] = timeField.text
 	elseif orderItem["type"] == "execOrder" or orderItem["type"] == "killOrder" then
-		orderItem["name"] = orderNameField:getItem(orderNameField.selectedItem).text		
+		orderItem["name"] = orderNameField:getItem(orderNameField.selectedItem).text
+
+	elseif orderItem["type"] == "varSet" then
+		--orderItem["typeVar"] = varTypeField:getItem(varTypeField.selectedItem).text
+		orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+		local typeVar = client.dataVarsList[orderItem["name"]]["type"]
+				
+		if typeVar == "String" then
+			orderItem["value"] = varValueField.text
+		elseif typeVar == "Number" then
+			orderItem["mod"] = varModField:getItem(varModField.selectedItem).text
+			orderItem["value"] = tonumber(varValueField.text)
+		elseif typeVar == "Boolean" then 
+			if varValueField.selectedItem == 1 then orderItem["value"] = false else orderItem["value"] = true end
+		elseif typeVar == "Alias" then
+			orderItem["value"] = varValueField:getItem(varValueField.selectedItem).text
+		elseif typeVar == "Order" then
+			orderItem["value"] = varValueField:getItem(varValueField.selectedItem).text
+		end
+
+  elseif orderItem["type"] == "execVAl" then
+		orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+		orderItem["force"] = tonumber(forceField.text)
+  elseif orderItem["type"] == "execVOr" then
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+
+  elseif orderItem["type"] == "trigVar" then
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+
+  elseif orderItem["type"] == "inpVar" then
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+		 
 	end
 	client.updateOrder("", orderName.text, client.dataOrders[orderName.text])
-	displayOrderHudAndItems(oldOrderName.text)
-	orderItemList.selectedItem = id
+	--displayOrderHudAndItems(oldOrderName.text)
+	--orderItemList.selectedItem = id
 end
 
 deleteOrderItem = function()
@@ -217,6 +282,27 @@ displayOrderHudAndItems = function(name)
 			astring = astring.." KO name "..v.name
 		elseif v["type"] == "cleanW" then
 			astring = astring.." CW wait "..dmp.okv(v.time).."s"
+			
+		elseif v["type"] == "varSet" then
+			local typeVar = client.dataVarsList[v.name]["type"]
+			if typeVar == "Number" then
+				astring = astring.." VS "..dmp.okv(v.name).." "..dmp.okv(v.mod).." "..tostring(v.value)				
+			else
+				astring = astring.." VS "..dmp.okv(v.name).." "..tostring(v.value)
+			end
+			
+		elseif v["type"] == "execVAl" then	
+			astring = astring.." EVA "..dmp.okv(v.name).." "..dmp.okv(v.force)
+			
+		elseif v["type"] == "execVOr" then  
+      astring = astring.." EVO "..dmp.okv(v.name)	
+
+    elseif v["type"] == "trigVar" then  
+      astring = astring.." TV "..dmp.okv(v.name) 
+
+    elseif v["type"] == "inpVar" then  
+      astring = astring.." IV "..dmp.okv(v.name) 
+			
 		end
 		orderItemList:addItem(astring).onTouch = cleanFields
 	end
@@ -231,7 +317,7 @@ getOrder = function(id)
 end
 
 --fill CRUD fields
-displayOrderItemCRUD = function(id, action, typeValue)
+displayOrderItemCRUD = function(id, action, typeValue, varName)
 	local order = nil
 	if id ~= nil and typeValue == nil and action ~= "ins" then order = getOrder(id) end
 	
@@ -247,6 +333,14 @@ displayOrderItemCRUD = function(id, action, typeValue)
 	typeField:addItem("cleanOut").onTouch = function() displayOrderItemCRUD(id, action, "cleanOut") end
 	typeField:addItem("cleanOAl").onTouch = function() displayOrderItemCRUD(id, action, "cleanOAl") end
 	typeField:addItem("cleanW").onTouch = function() displayOrderItemCRUD(id, action, "cleanW") end
+
+	typeField:addItem("varSet").onTouch = function() displayOrderItemCRUD(id, action, "varSet") end
+	typeField:addItem("execVAl").onTouch = function() displayOrderItemCRUD(id, action, "execVAl") end
+	typeField:addItem("execVOr").onTouch = function() displayOrderItemCRUD(id, action, "execVOr") end
+
+	typeField:addItem("trigVar").onTouch = function() displayOrderItemCRUD(id, action, "trigVar") end
+	typeField:addItem("inpVar").onTouch = function() displayOrderItemCRUD(id, action, "inpVar") end
+
 
 	if (order ~= nil and order["type"] == "output") or (action ~= nil and action == "ins" and typeValue == nil) or (typeValue ~= nil and typeValue == "output") then 
 		typeField.selectedItem = 1
@@ -266,6 +360,19 @@ displayOrderItemCRUD = function(id, action, typeValue)
 		typeField.selectedItem = 8
 	elseif (order ~= nil and order["type"] == "cleanW") or (typeValue ~= nil and typeValue == "cleanW") then 
 		typeField.selectedItem = 9
+	elseif (order ~= nil and order["type"] == "varSet") or (typeValue ~= nil and typeValue == "varSet") then 
+		typeField.selectedItem = 10
+  elseif (order ~= nil and order["type"] == "execVAl") or (typeValue ~= nil and typeValue == "execVAl") then 
+    typeField.selectedItem = 11
+  elseif (order ~= nil and order["type"] == "execVOr") or (typeValue ~= nil and typeValue == "execVOr") then 
+    typeField.selectedItem = 12
+
+  elseif (order ~= nil and order["type"] == "trigVar") or (typeValue ~= nil and typeValue == "trigVar") then 
+    typeField.selectedItem = 13
+
+  elseif (order ~= nil and order["type"] == "inpVar") or (typeValue ~= nil and typeValue == "inpVar") then 
+    typeField.selectedItem = 14
+
 	end
 	
 	if typeField.selectedItem == 1 or typeField.selectedItem == 4 or typeField.selectedItem == 7 then --output, input, cleanOut
@@ -323,6 +430,140 @@ displayOrderItemCRUD = function(id, action, typeValue)
 			i = i + 1
 		end
 		if iSelected ~= 0 then orderNameField.selectedItem = iSelected else orderNameField.selectedItem = 1 end
+	
+	elseif typeField.selectedItem == 10 then
+		varNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+		local i = 0; iSelected = 1
+		for k, v in pairs (client.dataVarsList) do
+			if client.dataVarsList[k].node == false then
+  			i = i + 1
+  			varNameField:addItem(k).onTouch = function() displayOrderItemCRUD(id, action, "varSet", k) end
+  			if (order ~= nil and order.name == k) or (varName ~= nil and varName == k) then iSelected = i	end
+  		end
+		end
+    --if iSelected ~= 0 then varNameField.selectedItem = iSelected else varNameField.selectedItem = 1 end
+    if i == 0 then return end
+    varNameField.selectedItem = iSelected
+
+    local typeVariable = client.dataVarsList[varNameField:getItem(varNameField.selectedItem).text].type 
+    
+    dmp.p("typeVariable: "..typeVariable)
+
+		if typeVariable == "String" then
+			varValueField = containerFields:addChild(client.GUI.input(38, 2, 16, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", ""))
+			if order ~= nil and order.value ~= nil then varValueField.text = order.value end
+		elseif typeVariable == "Number" then
+			varModField = containerFields:addChild(client.GUI.comboBox(38, 2, 11, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+			varModField:addItem("equal")
+			varModField:addItem("increment")
+			varModField:addItem("decrement")
+			if order ~= nil then 
+				if order.mod == "equal" then 
+					varModField.selectedItem = 1 
+				elseif order.mod == "increment" then 
+					varModField.selectedItem = 2 
+				elseif order.mod == "decrement" then 
+					varModField.selectedItem = 3 
+				end 
+			end
+
+			varValueField = containerFields:addChild(client.GUI.input(51, 2, 12, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", ""))
+			if order ~= nil and order.value ~= nil then varValueField.text = order.value end
+			
+		elseif typeVariable == "Boolean" then
+			varValueField = containerFields:addChild(client.GUI.comboBox(37, 2, 10, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+			varValueField:addItem("false")
+			varValueField:addItem("true")
+			if order ~= nil then 
+				if order.value == false then varValueField.selectedItem = 1 else varValueField.selectedItem = 2 end 
+			end 
+		elseif typeVariable == "Alias" then
+			local listAliases = {}
+			local aliasNode = require "AliasNode"
+			aliasNode.getAllAliases(client.dataAliases, listAliases)
+
+			varValueField = containerFields:addChild(client.GUI.comboBox(38, 2, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+			local iiSelected = 1
+			for k, v in ipairs(listAliases) do
+				varValueField:addItem(v)
+				if order ~= nil and v == order.value then iiSelected = k end
+			end
+			varValueField.selectedItem = iiSelected
+		elseif typeVariable == "Order" then
+			varValueField = containerFields:addChild(client.GUI.comboBox(38, 2, 20, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+			local tkeys = {}; for k in pairs(client.dataOrders) do table.insert(tkeys, k) end; table.sort(tkeys)
+			local i = 1; local iSelected = 0
+			for _, k in ipairs (tkeys) do
+				varValueField:addItem(k)
+				if order ~= nil and k == order.value then iSelected = i end
+				i = i + 1
+			end
+			if iSelected ~= 0 then varValueField.selectedItem = iSelected else varValueField.selectedItem = 1 end
+		end
+	
+	elseif typeField.selectedItem == 11 then --execVAl
+
+    varNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    local i = 0; iSelected = 1
+    for k, v in pairs (client.dataVarsList) do
+      if client.dataVarsList[k].node == false and client.dataVarsList[k]["type"] == "Alias" then
+        i = i + 1
+        varNameField:addItem(k)--.onTouch = function() displayOrderItemCRUD(id, action, "execVAl", k) end
+        if (order ~= nil and order.name == k) or (varName ~= nil and varName == k) then iSelected = i end
+      end
+    end
+    --if iSelected ~= 0 then varNameField.selectedItem = iSelected else varNameField.selectedItem = 1 end
+    if i == 0 then return end
+    varNameField.selectedItem = iSelected
+
+    forceField = containerFields:addChild(client.GUI.input(38, 2, 6, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", ""))
+    if order ~= nil and order.force ~= nil then forceField.text = order.force else forceField.text = 0 end
+
+  elseif typeField.selectedItem == 12 then --execVOr
+
+    varNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    local i = 0; iSelected = 1
+    for k, v in pairs (client.dataVarsList) do
+      if client.dataVarsList[k].node == false and client.dataVarsList[k]["type"] == "Order" then
+        i = i + 1
+        varNameField:addItem(k)--.onTouch = function() displayOrderItemCRUD(id, action, "execVOr", k) end
+        if (order ~= nil and order.name == k) or (varName ~= nil and varName == k) then iSelected = i end
+      end
+    end
+    --if iSelected ~= 0 then varNameField.selectedItem = iSelected else varNameField.selectedItem = 1 end
+    if i == 0 then return end
+    varNameField.selectedItem = iSelected  
+		
+  elseif typeField.selectedItem == 13 then --trigVar	
+		
+    varNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    local i = 0; iSelected = 1
+    for k, v in pairs (client.dataVarsList) do
+      if client.dataVarsList[k].node == false then
+        i = i + 1
+        varNameField:addItem(k)--.onTouch = function() displayOrderItemCRUD(id, action, "trigVar", k) end
+        if (order ~= nil and order.name == k) or (varName ~= nil and varName == k) then iSelected = i end
+      end
+    end
+    --if iSelected ~= 0 then varNameField.selectedItem = iSelected else varNameField.selectedItem = 1 end
+    if i == 0 then return end
+    varNameField.selectedItem = iSelected  
+
+  elseif typeField.selectedItem == 14 then --inpVar
+
+    varNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    local i = 0; iSelected = 1
+    for k, v in pairs (client.dataVarsList) do
+      if client.dataVarsList[k].node == false then
+        i = i + 1
+        varNameField:addItem(k)--.onTouch = function() displayOrderItemCRUD(id, action, "trigVar", k) end
+        if (order ~= nil and order.name == k) or (varName ~= nil and varName == k) then iSelected = i end
+      end
+    end
+    --if iSelected ~= 0 then varNameField.selectedItem = iSelected else varNameField.selectedItem = 1 end
+    if i == 0 then return end
+    varNameField.selectedItem = iSelected  
+		
 	end
 	
 	displayOrderCRUDCommands(action)
@@ -361,6 +602,12 @@ displayOrderItemCommands = function()
 end
 
 displayOrders = function()
+
+  local selected
+  if ordersList.selectedItem > 0 then 
+    selected = ordersList:getItem(ordersList.selectedItem).text 
+  end
+
 	ordersList:removeChildren()
 	local tkeys = {}
 	for k in pairs(client.dataOrders) do table.insert(tkeys, k) end
@@ -368,10 +615,14 @@ displayOrders = function()
  	local i = 1
  	for _, k in ipairs (tkeys) do
 		ordersList:addItem(k).onTouch = function() displayOrderHudAndItems(ordersList:getItem(k).text) end
-		if orderNameToBeSelected ~= nil and k == orderNameToBeSelected then	ordersList.selectedItem = i; displayOrderHudAndItems(orderNameToBeSelected)	end
+		
+		if selected ~= nil and k == selected then ordersList.selectedItem = i; displayOrderHudAndItems(selected) end
+		--if orderNameToBeSelected ~= nil and k == orderNameToBeSelected then	ordersList.selectedItem = i; displayOrderHudAndItems(orderNameToBeSelected)	end
 		i = i + 1
  	end
- 	if orderNameToBeSelected == nil and ordersList:count() > 0 then ordersList.selectedItem = 1; displayOrderHudAndItems(ordersList:getItem(1).text) end
+ 	--if orderNameToBeSelected == nil and ordersList:count() > 0 then ordersList.selectedItem = 1; displayOrderHudAndItems(ordersList:getItem(1).text) end
+  if selected == nil and ordersList:count() > 0 then ordersList.selectedItem = 1; displayOrderHudAndItems(ordersList:getItem(1).text) end 	
+ 	
 	client.application:draw()
 end
 
@@ -395,6 +646,7 @@ OrdersModif.display = function()
 
 	--list of orders
 	ordersList = window:addChild(client.GUI.list(3, 3, 19, 18, 1, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x3366CC, 0xFFFFFF, false))
+	ordersList.selectedItem = 0
 	
 	--description of order	
 	containerDescription:addChild(client.GUI.text(2, 1, 0xFFFFFF, "Old:"))
