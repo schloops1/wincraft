@@ -1,6 +1,4 @@
 local VariablesModif = {}
---local colors = require "colors"
---local sides = require "sides"
 local dmp = require "dump"
 
 local aliasNode = require "AliasNode"
@@ -75,14 +73,16 @@ local function validateFields(isNode)
 		elseif selectedType == "Boolean" then
 			--if valueField.text ~= "false" and valueField.text ~= "true" then return false end
 		elseif selectedType == "Order" then
+		  if valueField:count() == 0 then return false end
 		elseif selectedType == "Alias" then
+		  if valueField:count() == 0 then return false end
 		end
 	end
 	return true	
 end
 
 local function updateVar()
-	--if oldName ~= nameField.text and not aliasNode.isNew(tree.dataNode, nameField.text) then return end
+	if oldName == "Top" then return end--
 	local origVar = tree.getDataNode(tree.dataNode, tree:getSelectedName())
 	if not validateFields(origVar.node) then return end
 	local var = {}
@@ -101,13 +101,13 @@ end
 
 local function deleteVar()
 	local var = tree.getDataNode(tree.dataNode, tree:getSelectedName())
-	if var.node and #var.children > 0 then return end
+	if var.node and #var.children > 0 or var.name == "Top" then return end
 	client.deleteVar(var.name)
 	cleanUp()
 end
 
 local function insertVarNode()
-	--if oldName == nameField.text or not aliasNode.isNew(tree.dataNode, nameField.text) then return end
+	if oldName == nameField.text or not aliasNode.isNew(tree.dataNode, nameField.text) then return end
 
 	if not validateFields(true) then return end
 
@@ -128,7 +128,7 @@ local function insertVarNode()
 end
 
 local function insertVarLeaf()
-	--if oldName == nameField.text or not aliasNode.isNew(tree.dataNode, nameField.text) then return end
+	if oldName == nameField.text or not aliasNode.isNew(tree.dataNode, nameField.text) then return end
 
 	if not validateFields(false) then return end
 
@@ -166,9 +166,8 @@ end
 
 local function displayCRUD(var, aType)
 	if aType ~= nil then dmp.p("aType "..aType) end
-
-	if var == nil then client.GUI.alert("var est nul") end
-
+  
+  dmp.p("var.name: "..var.name)
 	local var2 = client.dataVarsList[var.name] 
 
 	containerCRUD:removeChildren()
@@ -252,7 +251,7 @@ VariablesModif.display = function()
 	tree.switch.refresh = refresh
 	client.listenToVarsList(tree, name)
 
-	--for value changes
+	--for value changes --should not be needed
 	--tree.switch.setState = refresh
 
 	local panelHEAD = window:addChild(client.GUI.panel(32, 2, 42, 5, 0x880000))

@@ -1,4 +1,5 @@
 local WCClient = {}
+
 package.loaded.GUI = nil
 WCClient.GUI = require "GUI"
 local thread = require "thread"
@@ -40,7 +41,6 @@ local settingFile = "settings.json"
 
 package.loaded.dump = nil
 local d = require "dump"
---d.newLog()
 
 local loadJsonData = function(fileName, json)
 	local f = io.open(fileName, "r")
@@ -181,7 +181,6 @@ listenToOrdersList = function(control, windowName)
 	return control
 end
 
-
 WCClient.stopListeningToWindowWires = function(windowsName)
 	listenData.windows[windowsName] = nil
 	d.p("stopListeningToWindowWires "..windowsName.." done")
@@ -242,42 +241,32 @@ getOffOn = function(block, side, color)
 end
 
 WCClient.scrollFromTo = function(percent, amountOrders, scrollSize, layout, displayLine)
-	--print("percent "..percent)
 	if amountOrders == 0 or scrollSize == 0 then return end
 	layout:removeChildren()
 	if percent == 0 then percent = 0.01 else percent = percent / 100 end
-	--print("percent "..percent)
 	local astart
 	local aend
 	astart = math.floor(amountOrders * percent)
-	--print("astart "..astart)
 	--if all fit, display all
 	if scrollSize >= amountOrders then
-		--print("all fit")
 		astart = 0
 		aend = amountOrders - 1
 	else 
 		--if not enough from astart
 		if scrollSize > amountOrders - astart then
-			--print("not enough from astart")
-			--aend = amountOrders - 1
 			aend = amountOrders - 1
 			astart = aend - scrollSize + 1
 		else
 			--more than enough to fill scrollSize
-			--print("more than enough to fill")
 			aend = astart + scrollSize - 1	
 		end
 	end
-	--print("astart "..astart)
-	--print("aend "..aend)
 	for i = astart, aend do
 		displayLine(i)
 	end
 end
 
 -- ************************************************************************************************************************
-
 
 WCClient.addSyncRectangle = function(block, side, color, name, activeColor, passiveColor)
 --WCClient.addSyncRectangle = function(block, side, color, name)
@@ -372,7 +361,6 @@ applyChanges = function(block, side, origValue, newValue, color)
 			--check type for different control types
 			listenData.windows[k][block][side][color].switch:setState(offOn)
 			WCClient.application:draw()
-			--d.p("end loop")
 		end
 	end
 end
@@ -390,10 +378,6 @@ listenToWire = function(control, windowsName, block, side, color)
 	return control
 end
 
-
---WCClient.addSyncSwitchNoLabel = function(block, side, color, name)
-
-
 WCClient.addSyncSwitchNoLabel = function(block, side, color, name, activeColor, passiveColor, pipeColor)
     if activeColor == nil then activeColor = 0x66DB80 end
     if passiveColor == nil then passiveColor = 0x1D1D1D end
@@ -401,8 +385,6 @@ WCClient.addSyncSwitchNoLabel = function(block, side, color, name, activeColor, 
     
     local offOn = getOffOn(block, side, color)
     local switch = WCClient.GUI.switch(1, 1, 11, activeColor, passiveColor, pipeColor, offOn)--0x999999, 
-    --local switch = WCClient.GUI.switch(1, 1, 10, 0x2B6FAB, 0x1D1D1D, 0xEEEEEE, offOn)
-     --local switch = WCClient.GUI.switch(1, 1, 10, 0x663380, 0x15151D, 0x22EE22, offOn)--0x999999, 
     switch.onStateChanged = function() swithValue(block, side, color) end
 	listenToWire(switch, name, block, side, color)
 	return switch
@@ -431,15 +413,8 @@ end
 
 applyChangesVar = function(varName, value)
 	d.p("applyChangesVar "..varName.." "..tostring(value).." done")
-	
-	--d.p(d.dmp(listenData.vars.windows))
-	
 	for k, v in pairs (listenData.vars.windows) do
-	d.p("cucou")
 		if listenData.vars.windows[k][varName] ~= nil then
-		
-		d.p("found")
-		
 			listenData.vars.windows[k][varName].switch:setState(value)
 			WCClient.application:draw()
 		end
@@ -447,6 +422,7 @@ applyChangesVar = function(varName, value)
 end
 
 listenToVar = function(control, windowName, varName)
+	d.p("listenToVar "..windowName..varName)
 	if listenData.vars.windows[windowName] == nil then listenData.vars.windows[windowName] = {}; end
 	if listenData.vars.windows[windowName][varName] == nil then listenData.vars.windows[windowName][varName] = control; end
 	d.p("listenToVar "..windowName.." "..varName)
@@ -455,7 +431,6 @@ end
 
 -- ************************************************************************************************************************
 
---WCClient.addSynchVarTxtButton = function(windowName, varName, control)
 WCClient.addSynchVarTxtButton = function(windowName, varName, control, color1, color2, color3, color4)
 	if color1 == nil then color1 = 0xFFEFFF end
 	if color2 == nil then color2 = 0x555555 end
@@ -596,10 +571,6 @@ local display = function()
 	end
 	local contextMenu2 = menu:addContextMenu("Application")
 	
-	--local tkeys = {}
-	--for k in pairs(settings.windows) do table.insert(tkeys, k) end
-	--table.sort(tkeys)
-	--table.sort(settings.windows, function(a,b) return a.order < b.order end)
 	local sorted = {}
 	for k, v in pairs(settings.windows) do
 	    table.insert(sorted,{k,v})
@@ -610,12 +581,6 @@ local display = function()
 	    contextMenu2:addItem(v[1]).onTouch = function() openWindow(v[1]) end
 	    d.p("added window: "..k)
 	end
-	
---	for k, v in ipairs (settings.windows) do
---	for k, v in pairs (settings.windows) do	
-		--contextMenu2:addItem(k).onTouch = function() openWindow(k) end
---		d.p("added window: "..k)
---	end
 	
 	local contextMenu3 = menu:addContextMenu("Locks")
 	contextMenu3:addItem("Unlock OrdersModif Window").onTouch = function() WCClient.lockWindow("OrdersModif", false) end
@@ -639,6 +604,7 @@ local mainLoop = function()
 			--eventType,dest,src,aport,strength,order, block, side, origValue, newValue, color
 			p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11 = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
 			p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11 = event.pullMultiple("modem_message", "redstone_changed")
+			d.p("a modem message was received")
 			d.p(d.okv(p1).." "..d.okv(p2).." "..d.okv(p3).." "..d.okv(p4).." "..d.okv(p5).." "..d.okv(p6).." "..d.okv(p7).." "..d.okv(p8).." "..d.okv(p9).." "..d.okv(p10).." "..d.okv(p11))
 			local eventType = p1;
 			if eventType == "modem_message" then
@@ -649,10 +615,10 @@ local mainLoop = function()
 					--local block = p7; local side = tostring(p8); local origValue = p9; local newValue = p10; local color = tostring(p11)
 					local block = p7; local side = p8; local origValue = p9; local newValue = p10; local color = p11
 					
-					if origValue == "" then origValue = 0 end---
-					if newValue == "" then newValue = 0 end---
-					if side == "" then side = 0 end---
-					if color == "" then color = 0 end---
+					if origValue == "" then origValue = 0 end
+					if newValue == "" then newValue = 0 end
+					if side == "" then side = 0 end
+					if color == "" then color = 0 end
 					if newValue == 0 then offOn = false else offOn = true end
 					
 					applyChanges(block, side, origValue, newValue, color)
@@ -660,13 +626,10 @@ local mainLoop = function()
 				elseif order == "remote_var_val_changed" then
 					--p7 varName - p8 value
 					WCClient.dataVarsList[p7].value = p8
-					
 					d.p("remote_var_val_changed")
 					applyChangesVar(p7, p8)
-
 				elseif order == "remote_var_changed" then
 					d.p("remote_var_changed")
-				
 					local action = p7;
 					if action == "ins" then
 						d.p("ins")
@@ -676,28 +639,24 @@ local mainLoop = function()
 						local parentNode = aliasNode.getDataNode(WCClient.dataVars, parentVar)
 						local decodedVar = json.decode(actualVar)
 						table.insert(parentNode.children, decodedVar)
-						WCClient.dataVarsList[varName] = actualVar
+						WCClient.dataVarsList[varName] = decodedVar --actualVar
 					elseif action == "upd" then
 						d.p("upd")
 						local oldVarName = p8; 
 						local newVarName = p9; local actualVar = p10
 						local parentNode = aliasNode.getParentDataNode(WCClient.dataVars, oldVarName)
+						local decodedVar = json.decode(actualVar)
 						local i
 						for k, v in ipairs(parentNode.children) do
 							if v.name == oldVarName then	i = k;	break end
 						end
 						table.remove(parentNode.children, i)
-						table.insert(parentNode.children, i, json.decode(actualVar))
+						table.insert(parentNode.children, i, decodedVar)
 						
 						WCClient.dataVarsList[oldVarName] = nil
-						WCClient.dataVarsList[newVarName] = json.decode(actualVar)
-						
-						d.p("coucou")
-						d.p(d.dmp(WCClient.dataVars))
-						d.p(d.dmp(WCClient.dataVarsList))
-						
-						
-						
+						WCClient.dataVarsList[newVarName] = decodedVar
+						--d.p(d.dmp(WCClient.dataVars))
+						--d.p(d.dmp(WCClient.dataVarsList))
 					elseif action == "del" then
 						d.p("del")
 						local varName = p8; 
@@ -724,7 +683,6 @@ local mainLoop = function()
 					end
 					applyChangesVarsList()
 					d.p("remote_var_changed --applyChangesVarList done")
-					
 					--varName, value
 				elseif order == "remote_order_changed" then
 					d.p("remote_order_changed")
@@ -732,18 +690,14 @@ local mainLoop = function()
 					if action == "ins" and src ~= modem.address then
 						d.p("ins")
 						local actualOrder = p9
-						--local json = require "json"
 						WCClient.dataOrders[orderName] = json.decode(actualOrder)
-						--package.loaded.json = nil
 					elseif action == "upd" and src ~= modem.address then
 						d.p("upd")
 						local newOrderName = p9; local actualOrder = p10
-						--local json = require "json"
 						WCClient.dataOrders[newOrderName] = json.decode(actualOrder)
 						if newOrderName ~= orderName then
 							WCClient.dataOrders[orderName] = nil
 						end
-						--package.loaded.json = nil
 					elseif action == "del" and src ~= modem.address then
 						d.p("del")
 						WCClient.dataOrders[orderName] = nil
@@ -806,7 +760,6 @@ local mainLoop = function()
 				elseif order == "remote_execute_order_changed"	then
 					d.p("remote_execute_order_changed")
 					local orderName = p7; local action = p8; local offOn = p9
-					--WCClient.GUI.alert("fucking holy shit")
 					applyChangesOrderAction(orderName, action, offOn)
 					d.p("remote_execute_order_changed --applyChangesOrderAction done")
 				end

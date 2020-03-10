@@ -1,3 +1,4 @@
+--should be named treeNode XD
 local AliasNode = {}
 
 AliasNode.getAllAliases = function(anode, fillMe)
@@ -13,7 +14,6 @@ end
 
 AliasNode.getParentDataNode = function(anode, name)
 	if anode.name == name then return anode end
-	--if anode.exp then
 		for _, node in ipairs(anode.children) do
 			if node.name == name then return anode end
 			if node.node == true then
@@ -21,12 +21,10 @@ AliasNode.getParentDataNode = function(anode, name)
 				if f ~= nil then return f end
 			end
 		end
-	--end
 end
 
 AliasNode.getDataNode = function(anode, name)
 	if anode.name == name then return anode end
-	--if anode.exp then
 		for _, node in ipairs(anode.children) do
 			if node.name == name then return node end
 			if node.node == true then
@@ -34,13 +32,9 @@ AliasNode.getDataNode = function(anode, name)
 				if f ~= nil then return f end
 			end
 		end
-	--end
 end
 
-
-
 local function checkNew(anode, name)
---local checkNewI = function(anode, name) --fucks up for some insane reason
 	if anode.name == name then return true end
 	if anode.exp then
 		for _, node in ipairs(anode.children) do

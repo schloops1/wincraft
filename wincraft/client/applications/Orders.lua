@@ -31,7 +31,6 @@
 	table.sort(tkeys)
  	
  	for _, k in ipairs (tkeys) do
---	for k, v in pairs (client.dataOrders) do
 		local cont = client.GUI.container(1, 1, 36, 1) 
 		memory[i] = cont:addChild(client.addSyncSwitchOrder(name, "offOn", k, k))
 		i = i+1

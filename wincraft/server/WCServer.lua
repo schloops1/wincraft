@@ -122,11 +122,6 @@ local fetchData = function()
 	return data
 end
 
-local makeAlias = function()
-	local alias = {}
-
-end
-
 local gWindowsLocked = function(eventType,dest,src,aport)
 	mo.send(src, port, "GWinLock", serialization.serialize(dataWindowsLocked))
 end
@@ -161,7 +156,6 @@ local tSignal = function(eventType,dest,src,aport,strength,order, block, side, c
 	if rs.getBundledOutput(side, color) == 0 then
 		charge = 255
 	else charge = 0 end
-	--rs.setBundledOutput(side, color, charge)
 	WCServer.setBundledOutput(rs, side, color, charge)
 end
 
@@ -176,7 +170,6 @@ end
 local sSignal = function(eventType,dest,src,aport,strength,order, block, side, color, offOn)
 	if offOn == false then charge = 0 else charge = 255	end
 	rs = co.proxy(block)
-	--rs.setBundledOutput(side, color, charge)
 	WCServer.setBundledOutput(rs, side, color, charge)
 end
 
@@ -195,11 +188,9 @@ local saveOrderExecFile = function(orderName)
 	if dataOrders[orderName]["repeat"] ~= "0" then o = o.." for i=0, "..dataOrders[orderName]["repeat"].." do " end
 	for k, v in pairs (dataOrders[orderName].orders) do
 		if v["type"] == "output" then
-			--o = o.."co.proxy('"..v.block.."').setBundledOutput("..v.side..", "..v.color..", "..v.force.."); "
 			o = o.."WCServer.setBundledOutput(co.proxy('"..v.block.."'),"..v.side..", "..v.color..", "..v.force.."); "
 			
 		elseif v["type"] == "cleanOut" then	
-			--f = f.."co.proxy('"..v.block.."').setBundledOutput("..v.side..", "..v.color..", "..v.force.."); "
 			f = f.."WCServer.setBundledOutput(co.proxy('"..v.block.."'),"..v.side..", "..v.color..", "..v.force.."); "
 			
 		elseif v["type"] == "wait" then
@@ -228,11 +219,9 @@ local saveOrderExecFile = function(orderName)
       if v.mod == nil then o = o.."'); " else o = o..v.mod.."'); " end
 		
 		elseif v["type"] == "execVAl" then
---		  o = o.." WCServer.eAlias(_, _, _, _, _, _, '"..dataVariablesList[v.name].value.."',"..v['force'].."); "
 		  o = o.." WCServer.eAlias(_, _, _, _, _, _, WCServer.getVarValue('"..v.name.."'),"..v['force'].."); "
 		  
     elseif v["type"] == "execVOr" then
---      o = o.." WCServer.eOrder(_, _, _, _, _, _, '"..dataVariablesList[v.name].value.."', 'offOn', true); "
       o = o.." WCServer.eOrder(_, _, _, _, _, _, WCServer.getVarValue('"..v.name.."'), 'offOn', true); "
 		
     elseif v["type"] == "trigVar" then
@@ -262,17 +251,13 @@ end
 local function openCloseDoor(node, open)
 	local red = co.proxy(node.block)
 	if red.getBundledOutput(node.side, node.color) == 255 then 
-		--red.setBundledOutput(node.side, node.color, 0) 
 		WCServer.setBundledOutput(red, node.side, node.color, 0)
 		if open then 
-			--red.setBundledOutput(node.side, node.color, 255)
 			WCServer.setBundledOutput(red, node.side, node.color, 255)
 		end
 	else
 		WCServer.setBundledOutput(red, node.side, node.color, 255)
-		--red.setBundledOutput(node.side, node.color, 255)
 		if not open then 
-			--red.setBundledOutput(node.side, node.color, 0) 
 			WCServer.setBundledOutput(red, node.side, node.color, 0)
 		end	
 	end
@@ -293,7 +278,6 @@ WCServer.execAliasNode = function(anode, charge)
 				if node.door then
 					openCloseDoor(node, charge > 0)
 				else
-					--co.proxy(node.block).setBundledOutput(node.side, node.color, charge)
 					WCServer.setBundledOutput(co.proxy(node.block), node.side, node.color, charge)
 				end
 			end
@@ -302,7 +286,6 @@ WCServer.execAliasNode = function(anode, charge)
 		if anode.door then
 			openCloseDoor(anode, charge > 0)
 		else
-			--co.proxy(anode.block).setBundledOutput(anode.side, anode.color, charge)
 			WCServer.setBundledOutput(co.proxy(anode.block), anode.side, anode.color, charge)
 		end
 	end
@@ -375,6 +358,7 @@ local udVar = function(eventType,dest,src,aport,strength,order, parentVarName, i
 end
 
 local vVar = function(eventType,dest,src,aport,strength,order, varName, newValue)
+	if dataVariablesList[varName] == nil then return end
 	dataVariablesList[varName].value = newValue
 	if dataVariablesList[varName].saveAlways == true then
 		saveVariable(varName, newValue)
@@ -384,6 +368,7 @@ end
 
 WCServer.vVarExec = function(aname, avalue, amod)
   local var = dataVariablesList[aname]
+  if var == nil then return end
   local varType = var["type"]
   local value
   if  varType == "Number" then
@@ -408,7 +393,6 @@ WCServer.vVarExec = function(aname, avalue, amod)
   end
     
   vVar(_, _, _, _, _, _, aname, value)
-  
 end
 
 local uVar = function(eventType,dest,src,aport,strength,order, oldVarName, newVarName, actualVar)
@@ -452,7 +436,9 @@ local dVar = function(eventType,dest,src,aport,strength,order, varName)
 	dataVariablesList[varName] = nil
 	saveJsonData("dataVariablesList.json", dataVariablesList)
 	
+	print("broadcasting del variable")
 	mo.broadcast(port, "remote_var_changed", "del", varName)
+	print("done broadcasting del variable")
 end
 
 local uOrder = function(eventType,dest,src,aport,strength,order, oldOrderName, newOrderName, actualOrder)
@@ -489,6 +475,7 @@ local lWindow = function(eventType,dest,src,aport,strength,order, windowName, of
 end
 
 WCServer.eOrder = function(eventType,dest,src,aport,strength,order, orderName, action, offOn)
+	if dataOrders[orderName] == nil then return end
 	dataOrders[orderName].offOn = offOn
 	if action == "offOn" then
 		if offOn == true then
@@ -550,13 +537,12 @@ WCServer.start = function()
 	orders["UAlias"] = uAlias
 	orders["DAlias"] = dAlias
 	orders["UDAlias"] = udAlias
+	orders["EAlias"] = WCServer.eAlias
 	orders["IVar"] = iVar
 	orders["UVar"] = uVar
 	orders["DVar"] = dVar
 	orders["UDVar"] = udVar
 	orders["VVar"] = vVar
-	
-	orders["EAlias"] = WCServer.eAlias
 
 	while true do
 		eventType,dest,src,aport,strength,order, p7, p8, p9, p10, p11 = event.pull()

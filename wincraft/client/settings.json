@@ -6,12 +6,6 @@
 			"order": 1,
 			"control": ""
 		},
-		"Aliases": {
-			"opened": false,
-			"lockable": false,
-			"order": 2,
-			"control": ""
-		},
 		"AliasesModif": {
 			"opened": false,
 			"lockable": false,
@@ -44,5 +38,5 @@
 		}
 	},
 	"port": 1002,
-	"debug": true
+	"debug": false
 }

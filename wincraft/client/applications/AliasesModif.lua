@@ -31,6 +31,7 @@ end
 
 local function upDownAlias(upDown)
 	local selectedName = tree:getSelectedName()
+	if selectedName == "Top" then return end
 	local selectedAlias = tree.getDataNode(tree.dataNode, selectedName)
 	local selectedParentAlias = tree.getParentDataNode(tree.dataNode, selectedName)
 	local i 
@@ -50,6 +51,7 @@ local function upDownAlias(upDown)
 end
 
 local function updateAlias()
+  if oldName == "Top" then return end--
 	if oldName ~= nameField.text and not aliasNode.isNew(tree.dataNode, nameField.text) then return end
 	local origAlias = tree.getDataNode(tree.dataNode, tree:getSelectedName())
 	local alias = {}
@@ -69,6 +71,7 @@ local function updateAlias()
 end
 
 local function deleteAlias()
+  if oldName == "Top" then return end--
 	local alias = tree.getDataNode(tree.dataNode, tree:getSelectedName())
 	if alias.node and #alias.children > 0 then return end
 	client.deleteAlias(alias.name)
@@ -207,6 +210,7 @@ end
 
 local refresh = function()
 	tree:refresh()
+	tree.selectedItem = 1 
 	client.application:draw()
 end
 

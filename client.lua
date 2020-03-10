@@ -16,8 +16,8 @@ local function prequire(m)
   return err
 end
 
-
-local safe = false
+local safe = true
+--set to true to avoid error msg when exiting; sadly hides most error msg
 if safe == true then
 	local mod = prequire("WCClient")
 	os.exit()

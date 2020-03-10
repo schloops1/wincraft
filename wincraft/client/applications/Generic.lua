@@ -1,5 +1,4 @@
 local Generic = {}
---local bit32 = require "bit32"
 local client
 local name = "Generic"
 
@@ -10,7 +9,6 @@ function Generic:set(aname)
 	client = self; name = aname
 end
 
---layout:addChild(client.addSyncRectangle("679688be-2198-4fdc-bc31-246d90fff87a", "2", "15", name))	
 local comboBlock
 local comboSide
 local layoutColors	
@@ -22,7 +20,6 @@ local switchValues = function()
 		layoutColors:addChild(client.addSyncSwitch(
 			comboBlock:getItem(comboBlock.selectedItem).text, 
 			sides[comboSide:getItem(comboSide.selectedItem).text], i, colors[i], name))
-			--comboSide.selectedItem - 1, i, colors[i], name))
 	end
 end
 	
@@ -30,7 +27,6 @@ Generic.display = function()
 	local window = client.application:addChild(client.GUI.titledWindow(50, 22, 58, 22, name, true))
 	window.actionButtons.close.onTouch = function() client.closeWindow(name) end--; window:close() end
 	local panelHeader = window:addChild(client.GUI.panel(2, 2, window.width -2, 3, 0x880000))
-	--local panelSwitches = window:addChild(client.GUI.panel(17, 6, 10, 16, 0x880000))
 	local panelSwitches = window:addChild(client.GUI.panel(16, 6, 12, 16, 0x880000))
 	
 	local layoutChoice = window:addChild(client.GUI.layout(2, 2, window.width -2, 3, 2, 1))

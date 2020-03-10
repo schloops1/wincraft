@@ -95,11 +95,7 @@ createAppliFile = function()
 	astring = astring.."local window = client.application:addChild(client.GUI.titledWindow(50, 22, 42, "..(appli.vsize)..", name, true,"..appli.color1..")) "
 	astring = astring.."window.actionButtons.close.onTouch = function() client.closeWindow(name) end "
 	astring = astring.."local container = window:addChild(client.GUI.container(2, 2, 40, "..(appli.vsize - 1)..")); "
-
-	--astring = astring.."container.passScreenEvents = false; container.fromItem = 1; "
-	--astring = astring.."container.eventHandler = scrollEventHandler
 	
-	--astring = astring.."window.backgroundPanel.colors.background=0x333512; "-- window.backgroundPanel.colors.transparency=0.5; 
 	for k, v in pairs(appli.items) do--0x123512
 		if v["type"] == "output" then
 			astring = astring.."container:addChild(client.GUI.text(2, "..k * appli.interval..", "..appli.color2..", '"..v.text.."')); "
@@ -120,37 +116,28 @@ createAppliFile = function()
 			local alias = aliasNode.getDataNode(client.dataAliases, v.alias)
 			astring = astring.."container:addChild(client.GUI.text(2, "..k*appli.interval..", "..appli.color2..", '"..v.alias.."')); "
 			if alias.node then
-				--astring = astring.."container:addChild(client.GUI.text(2, "..k*appli.interval..", "..appli.color2..", '"..v.alias.."')); "
 				astring = astring.."local offButton"..k.." = container:addChild(client.GUI.button("..xCtrl..", "..k*appli.interval..", 5, 1, "..appli.color5..", "..appli.color6..", "..appli.color3..", "..appli.color4..", 'Off'))"
 				astring = astring.."offButton"..k..".onTouch = function() client.offOnAlias('"..v.alias.."', 0) end "
 				astring = astring.."local onButton"..k.." = container:addChild(client.GUI.button("..(xCtrl + 6)..", "..k*appli.interval..", 5, 1, "..appli.color5..", "..appli.color6..", "..appli.color3..", "..appli.color4..", 'On'))"
 				astring = astring.."onButton"..k..".onTouch = function() client.offOnAlias('"..v.alias.."', 255) end "
 			else
-				--astring = astring.."container:addChild(client.GUI.text(2, "..k*appli.interval..", "..appli.color2..", '"..v.alias.."')); "
 				astring = astring.."local ctrl"..k.." = client.addSyncSwitchNoLabel('"..alias.block.."', "..alias.side..", "..alias.color..", '"..appli.name.."', "..appli.color3..", "..appli.color4..", "..appli.color5.."); "
 				astring = astring.."ctrl"..k..".y = "..k*appli.interval.."; ctrl"..k..".x = "..xCtrl.." ; "
 				astring = astring.."container:addChild(ctrl"..k.."); "
 			end
-			
 		elseif v["type"] == "variable" then
 			astring = astring.."container:addChild(client.GUI.text(2, "..k*appli.interval..", "..appli.color2..", '"..v.var.."')); "
 			astring = astring.."local ctrl"..k.." = client.addSynchVarTxt('"..appli.name.."', '"..v.var.."'); "
-			
 			astring = astring.."ctrl"..k..".y = "..k*appli.interval.."; ctrl"..k..".x = "..xCtrl.."; "
 			astring = astring.."container:addChild(ctrl"..k.."); "	
-
 		elseif v["type"] == "updVar" then
 			astring = astring.."container:addChild(client.GUI.text(2, "..k*appli.interval..", "..appli.color2..", '"..v.var.."')); "
-			
 			astring = astring.."local ctrl"..k.." = client.addSynchVarEditable('"..appli.name.."', '"..v.var.."'); "
 			astring = astring.."ctrl"..k..".y = "..k*appli.interval.."; ctrl"..k..".x = "..xCtrl.."; "
 			astring = astring.."container:addChild(ctrl"..k.."); "	
-
 			astring = astring.."local ctrlb"..k.." = client.addSynchVarTxtButton('"..appli.name.."', '"..v.var.."', ctrl"..k..", "..appli.color5..", "..appli.color6..", "..appli.color3..", "..appli.color4.."); "
-
 			astring = astring.."ctrlb"..k..".y = "..k*appli.interval.."; ctrlb"..k..".x = "..(xCtrl + 18).."; "
 			astring = astring.."container:addChild(ctrlb"..k.."); "	
-		
 		end
 	end
 	astring = astring.."return window end ".."return "..appli.name
@@ -165,8 +152,6 @@ insertAppli = function()
 	aAppli.vsize = vsizeField.selectedItem + 5
 	aAppli.interval = vIntervalField.selectedItem
 	
-	dmp.p("a")
-	
 	if ApplicationFactory.color1Text == nil or ApplicationFactory.color1Text.textColor == nil then
 		for i=1,6,1 do
 			ApplicationFactory["color"..i.."Text"] = {}
@@ -175,13 +160,9 @@ insertAppli = function()
 		end	
 	end
 	
-	dmp.p("b")
-	
 	for ii=1,6,1 do
 		aAppli["color"..ii] = ApplicationFactory["color"..ii.."Text"].textColor
 	end
-	
-	dmp.p("c")
 	
 	cleanCRUDFields()
 	aAppli.items = {}
@@ -214,13 +195,11 @@ updateAppli = function()
 	appli.name = appliNameField.text
 	appli.vsize = vsizeField.selectedItem + 5
 	appli.interval = vIntervalField.selectedItem
-	--appli.color1 = ApplicationFactory.color1Text.textColor
 	
 	for ii=1,6,1 do
 		appli["color"..ii] = ApplicationFactory["color"..ii.."Text"].textColor
 	end
 	
-	--appli.color1 = 33351
 	cleanCRUDFields()
 	saveData()
 	deleteAppliFile(oldAppliNameField.text)
@@ -308,7 +287,6 @@ updateAppliItem = function()
 	
 	elseif appliItem["type"] == "updVar" then
 		appliItem["var"] = varField:getItem(varField.selectedItem).text
-
 	end
 	
 	saveData()
@@ -360,7 +338,6 @@ displayAppliItemCRUD = function(id, action, typeValue)
 	typeField:addItem("execOrder").onTouch = function() displayAppliItemCRUD(id, action, "execOrder") end
 	typeField:addItem("display").onTouch = function() displayAppliItemCRUD(id, action, "display") end
 	typeField:addItem("nothing").onTouch = function() displayAppliItemCRUD(id, action, "nothing") end
-	
 	typeField:addItem("variable").onTouch = function() displayAppliItemCRUD(id, action, "variable") end
 	typeField:addItem("updVar").onTouch = function() displayAppliItemCRUD(id, action, "updVar") end
 
@@ -374,13 +351,10 @@ displayAppliItemCRUD = function(id, action, typeValue)
 		typeField.selectedItem = 4
 	elseif (item ~= nil and item["type"] == "nothing") or (typeValue ~= nil and typeValue == "nothing") then 
 		typeField.selectedItem = 5	
-
 	elseif (item ~= nil and item["type"] == "variable") or (typeValue ~= nil and typeValue == "variable") then 
 		typeField.selectedItem = 6	
-
 	elseif (item ~= nil and item["type"] == "updVar") or (typeValue ~= nil and typeValue == "updVar") then 
 		typeField.selectedItem = 7
-
 	end
 	
 	if typeField.selectedItem == 1 or typeField.selectedItem == 4 then --output, display
@@ -447,9 +421,9 @@ displayAppliItemCRUD = function(id, action, typeValue)
 		local iiSelected = 1
 		local ii = 1
 		for k, v in pairs(client.dataVarsList) do
-			varField:addItem(k)
-			if item ~= nil and k == item.var then iiSelected = ii end
-			ii = ii + 1
+  			varField:addItem(k)
+  			if item ~= nil and k == item.var then iiSelected = ii end
+  			ii = ii + 1
 		end
 		varField.selectedItem = iiSelected
 	end
@@ -460,24 +434,16 @@ end
 
 local appliSelected = function()
 	appliItemList:removeChildren()
-	--appli = getAppli(name)
 	--fill header
 	appliNameField.text = appli.name
 	oldAppliNameField.text = appli.name
 	vsizeField.selectedItem = (appli.vsize - 5)
 	vIntervalField.selectedItem = appli.interval
 	
-	
-	dmp.p("appliSelected a")
-	
-	--ici
 	for i=1,6,1 do
 		ApplicationFactory.onColorSelected(i, appli["color"..i])
 	end
 
-	dmp.p("appliSelected b")
-
-	--fill items
 	local items = appli.items
 	table.sort(items, function(a,b) return a.id < b.id end)
 
@@ -496,20 +462,13 @@ local appliSelected = function()
 			astring = astring.." N "
 		elseif v["type"] == "variable" then
 			astring = astring.." V "..v.var	
-		
 		elseif v["type"] == "updVar" then
 			astring = astring.." UV "..v.var	
-			
 		end			
 	
 		appliItemList:addItem(astring).onTouch = cleanCRUDFields
 	end
-		
-	dmp.p("appliSelected c")	
-		
 	client.application:draw()
-	
-	dmp.p("appliSelected d")
 end
 
 displayApplis = function(name)
@@ -519,8 +478,6 @@ displayApplis = function(name)
 	local sort_func = function( a,b ) return a.name < b.name end
 	table.sort( dataApplis, sort_func )
 	
-	dmp.p("displayApplis a")
-	
  	local i = 1
  	for k, v in ipairs (dataApplis) do
 		applisList:addItem(v.name).onTouch = function() cleanCRUDFields(); appli = getAppli(v.name); appliSelected() end
@@ -529,14 +486,8 @@ displayApplis = function(name)
 		--i = i + 1
  	end
  	
- 	dmp.p("displayApplis b")
- 	
  	applisList.selectedItem = i
  	if appli == nil and applisList:count() > 0 then appli = getAppli(applisList:getItem(1).text) end
- 	--if orderNameToBeSelected == nil and ordersList:count() > 0 then ordersList.selectedItem = 1; displayOrderHudAndItems(ordersList:getItem(1).text) end
-	----client.application:draw()
-	
-	dmp.p("displayApplis c")
 	
 	if appli ~= nil then appliSelected(appli.name) end
 	client.application:draw()
@@ -572,13 +523,11 @@ displayAppliItemCommands = function()
 	newButton.onTouch = function() if applisList:count() == 0 then return end; displayAppliItemCRUD(appliItemList.selectedItem - 1, "ins") end
 	
 	for i=1,6,1 do
-	--	ApplicationFactory["color"..i.."Text"] = containerButtons:addChild(client.GUI.text(posXColors[i], posYColors[i], 0xFFFFFF, "Color "..i..":"))
 		containerButtons:addChild(client.GUI.button(posXColors[i] + 8, posYColors[i], 3, 1, 0xFFEFFF, 0x555555, 0x880000, 0xFFFFFF, "U")).onTouch = function()
 			local object = {}; object.onColorSelected = ApplicationFactory.changeColor
 			client.GUI.colorChooser(client.application, object, i, 0xFFEFFF)
 		end
 	end
-	
 end
 
 ApplicationFactory.changeColor = function(colorNbr, color)
@@ -629,33 +578,20 @@ ApplicationFactory.display = function()
 	--get data
 	readData()
 
-	dmp.p("main a")
-
 	--list of applis
 	applisList = window:addChild(client.GUI.list(3, 3, 19, 18, 1, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x3366CC, 0xFFFFFF, false))
-	
-	
-	dmp.p("main b")
 	
 	--header of appli	
 	displayHeaderFields()
 
-	dmp.p("main c")
-
 	--appli items
 	appliItemList = window:addChild(client.GUI.list(26, 5, 53, 12, 1, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x3366CC, 0xFFFFFF, false))
-
-	dmp.p("main c")
 	
 	--buttons
 	displayAppliCommands()	
 	displayAppliItemCommands()
 
-	dmp.p("main d")
-
 	displayApplis()
-	
-	dmp.p("main e")
 	
 	return window
 end	

@@ -2682,7 +2682,7 @@ function GUI.aliasTree(node, ...) --jpi
 	tree.dataNode = node
 	tree.onItemExpanded = function() tree:treeUpdateAliasList() end
 	tree.draw = treeAliasDraw
-	tree.getSelectedName = function(self) return self.items[self.selectedItem + self.fromItem - 1].name end
+	tree.getSelectedName = function(self) if self.selectedItem == nil or self.selectedItem < 1 or self.selectedItem > #self.items then self.selectedItem = 1 end; return self.items[self.selectedItem + self.fromItem - 1].name end
 	treeUpdateAliasList(tree)
 	tree.getDataNode = getDataNode
 	tree.getParentDataNode = getParentDataNode
