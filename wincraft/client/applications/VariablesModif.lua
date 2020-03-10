@@ -95,15 +95,15 @@ local function updateVar()
 		setTypeFields(var)
 		if saveField:getItem(saveField.selectedItem).text == "Always" then var.saveAlways = true else var.saveAlways = false end
 	end
-	client.updateVar(oldName, var.name, var)
 	cleanUp()
+	client.updateVar(oldName, var.name, var)
 end
 
 local function deleteVar()
 	local var = tree.getDataNode(tree.dataNode, tree:getSelectedName())
 	if var.node and #var.children > 0 or var.name == "Top" then return end
-	client.deleteVar(var.name)
 	cleanUp()
+	client.deleteVar(var.name)
 end
 
 local function insertVarNode()
@@ -123,8 +123,8 @@ local function insertVarNode()
 	var.node = true
 	var.exp = true
 	var.children = {}
-	client.insertVar(parent.name, var.name, var)
 	cleanUp()
+	client.insertVar(parent.name, var.name, var)
 end
 
 local function insertVarLeaf()
@@ -151,8 +151,8 @@ local function insertVarLeaf()
 		var.value = 0
 		var.saveAlways = true
 	end
-	client.insertVar(parent.name, var.name, var)
 	cleanUp()
+	client.insertVar(parent.name, var.name, var)
 end
 
 local function displayHEAD(var)

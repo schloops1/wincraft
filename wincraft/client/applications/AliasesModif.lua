@@ -66,16 +66,16 @@ local function updateAlias()
 		alias.side = sides[sideField:getItem(sideField.selectedItem).text]
 		alias.color = colors[colorField:getItem(colorField.selectedItem).text]
 	end
-	client.updateAlias(oldName, alias.name, alias)
 	cleanUp()
+	client.updateAlias(oldName, alias.name, alias)
 end
 
 local function deleteAlias()
   if oldName == "Top" then return end--
 	local alias = tree.getDataNode(tree.dataNode, tree:getSelectedName())
 	if alias.node and #alias.children > 0 then return end
-	client.deleteAlias(alias.name)
 	cleanUp()
+	client.deleteAlias(alias.name)
 end
 
 local function insertAliasNode()
@@ -92,8 +92,8 @@ local function insertAliasNode()
 	alias.node = true
 	alias.exp = true
 	alias.children = {}
-	client.insertAlias(parent.name, alias.name, alias)
 	cleanUp()
+	client.insertAlias(parent.name, alias.name, alias)
 end
 
 local function insertAliasLeaf()
@@ -120,8 +120,8 @@ local function insertAliasLeaf()
 		alias.side = 1
 		alias.color = 1
 	end
-	client.insertAlias(parent.name, alias.name, alias)
 	cleanUp()
+	client.insertAlias(parent.name, alias.name, alias)
 end
 
 local function displayHEAD(alias)
