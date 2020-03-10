@@ -1,4 +1,4 @@
-# wincraft
+# Wincraft
 
 Poorly named, Wincraft is software to control the state of wires in MC and create windows to manipulate those states without requiring any programmation knowledge. 
 
@@ -76,5 +76,51 @@ They will make more sense after reading the doc on the variables window
 ## Orders List screen:
 Lists all recorded orders, displays their state (running or not) and allows starting and killing them. NB, they end by themselves when they executed all their commands.
 
-![alt text](./doc/orders/ordersList.png "Orders List Screen")
+![alt text](./doc/orders/OrdersList.png "Orders List Screen")
 
+## Variables screen:
+Variables can be created and their value set from this window. They are organized in a tree.
+
+![alt text](./doc/variables/variablesScreen.png "Variables Screen")
+
+### Type of variables:
+* number
+* string
+* boolean
+* alias
+* order
+
+### Content of the window:
+* name
+* node or not
+* type
+* save: data change from this window is always saved but not forcefully from other sources. This tells the program if the variable value needs to be saved on hard drive when it is saved from other sources (orders and custom windows).
+* value. What value can be contained will depend on the type
+
+Caution: variables can make the program crash if pointing towards aliases or orders that don't exist anymore. I need to protect against that but haven't yet.
+
+## ApplicationFactory screen
+This window permits the creation of custom applications that can be found under the Custom menu. Those are created for the computer on which they were created and not synchronized/saved elsewhere. It's a vertical list of controls.
+First, you give it a name, then a vertical size and distance between vertical elements.
+Then, you add the controls you want to see appear. 
+
+![alt text](./doc/appliFactory/appliFactory.png "AppliFactory Screen")
+
+### Control options:
+* output: a title, a triplet (redstone block/side/wire) and a charge when on (off is 0) - allows controlling it
+* outAlias: same for an alias
+* execOrder: order to control
+* display: a title, a triplet (redstone block/side/wire) and a charge when on (off is 0) - only displays the info
+* nothing: adds a vertical space
+* variable: displays the value of a variable
+* updVar: displays and allow modifying the value of a variable
+
+You can also change the colors if you wish:
+
+![alt text](./doc/appliFactory/palette.png "Palette Screen")
+
+This will result in, for example:
+
+![alt text](./doc/appliFactory/appliBase.png "AppliBase Screen")
+
+You can create as many of such as you wish.
