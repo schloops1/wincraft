@@ -54,7 +54,7 @@ Orders contain order commands. Executing an order will create a thread on the se
 
 ![alt text](./doc/orders/ordersScreen.png "Orders Screen")
 
-### type of order commands:
+### Type of order commands:
 * output: sets the state (0-255) of a triplet (redstone block/side/wire)
 * outputAlias: sets the state (0-255) of an alias and all it's leaves if it's a node
 * wait: sets an amount of seconds to wait
@@ -65,7 +65,7 @@ Orders contain order commands. Executing an order will create a thread on the se
 * cleanOAl: same as cleanoput but uses an alias
 * cleanW: same as wait but executed at the end or when an order is killed
 
-### type of order commands linked to variables:
+### Type of order commands linked to variables:
 They will make more sense after reading the doc on the variables window
 * varSet: sets a variable. A number can be set, incremented and decremented by a value. Strings, booleans, alias and order types can be set depending on their type. 
 * execVAl: equivalent to outputAlias but to the alias the specified variables equals to
@@ -74,7 +74,7 @@ They will make more sense after reading the doc on the variables window
 * trigVar: triggers any inpVar listening for the specified variable
 
 ## Orders List screen:
+Lists all recorded orders, displays their state (running or not) and allows starting and killing them. NB, they end by themselves when they executed all their commands.
 
-
-
+![alt text](./doc/orders/ordersList.png "Orders List Screen")
 
