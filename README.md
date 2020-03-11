@@ -2,6 +2,8 @@
 
 Poorly named, Wincraft is software to control the state of wires in MC and create windows to manipulate those states without requiring any programmation knowledge. 
 
+![alt text](./doc/welcome.png "Welcome Screen")
+
 ## Features:
 * multi-users and multi-screens with synchronized data
 * advanced control and automation features
@@ -124,3 +126,30 @@ This will result in, for example:
 ![alt text](./doc/appliFactory/appliBase.png "AppliBase Screen")
 
 You can create as many of such as you wish.
+
+NB1: custom windows won't react properly if you have 2 controls dealing with the same wire and only one wire
+NB2: it's is easy to crash the application by creating custom applications that use an order, alias or variable that you then rename or delete.
+
+# Installation
+
+## Hardware
+You will need at minimum a server and one client to run wincraft
+Either have the server and it's clients on a lan or equip them all with a wifi network card. Mixing can work too.
+You can locate all the computers inside a server rack if you want or not. 
+NB on a previous version of Opencomputers, there was a bug where wifi cards wouldn't be able to communicate between computers inside a rack so if you use that solution, make sure to get the last version of the mod.
+
+## Software:
+* from the https://github.com/schloops1/wincraft page (this one) click "clone or download" then click "download zip".
+* extract all the files (the content of wincraft-master) into the home directory of your Opencomputer's server and client(s) hard drives
+* delete the doc directories if you need space
+* if you are running on a 1.7.10 version of minecraft, you need to set the variable higherThan_1_7_10 (contained in the settings.json file of the server) to false.
+* modify the .shrc file (should have extracted directly into home or you chose the wrong spot) of your server and client(s). Server .shrc should contain "srv" (no quotes) and client "client" (no quotes). That way, the computers will launch wincraft at boot.
+
+# Warning:
+This is for private networks. It is not suited for public networks where you can't trust all users as it certainly could be abused to crash the server. It is possible to crash the client but no data loss should occur so you can simply restart it. The server can be crashed with variable shenanigans but equally, no data loss should occur. I'll add additional security to counter that.
+Anyway, it should be perfectly useable as it currently is.
+* srv -enter or client-enter to launch the programs manually
+
+If you want some errors to display on the screen of the client, modify client.lua so that "local safe = true" becomes "local safe = false" .
+Client and server have a setting.json file where you can set a debug variable to true if you wish for loging to be written to log.txt. 
+They also contain the variable port.
