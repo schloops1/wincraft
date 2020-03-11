@@ -28,9 +28,8 @@ Poorly named, Wincraft is software to control the state of wires in MC and creat
 # Standard wincraft screens:
 
 ## Generic screen:
-It's aim is to display and allow changing the state of wires (0 (off) - 255 (on))
-The user chooses a redstone block and a side after which the window displays the state of the 16 wires concerned and allows the user to switch their state
-
+It's aim is to display and allow changing the state of wires (0 (off) - 255 (on)).
+The user chooses a redstone block and a side after which the window displays the state of the 16 wires concerned and allows the user to switch their state.
 
 ![alt text](./doc/generic/genericScreen.png "Generic Screen")
 
@@ -41,7 +40,7 @@ A node can contain nodes and leaves while a leaf references a specific wire.
 ### Aliases have 2 roles:
 * more readable than a triplet of redstone block/side/wire (just like an URL is more readable than an IP address)
 * allows regrouping wires so one command can change all of them
-* aliases are executed on the server in a different thread
+* also, aliases are executed on the server in a different thread
 
 ![alt text](./doc/alias/aliasScreen.png "Aliases Screen")
 
@@ -133,7 +132,7 @@ NB2: it's is easy to crash the application by creating custom applications that 
 # Installation
 
 ## Hardware
-You will need at minimum a server and one client to run wincraft
+You will need at minimum a server and one client to run wincraft.
 Either have the server and it's clients on a lan or equip them all with a wifi network card. Mixing can work too.
 You can locate all the computers inside a server rack if you want or not. 
 NB on a previous version of Opencomputers, there was a bug where wifi cards wouldn't be able to communicate between computers inside a rack so if you use that solution, make sure to get the last version of the mod.
