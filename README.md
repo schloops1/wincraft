@@ -138,11 +138,10 @@ You can locate all the computers inside a server rack if you want or not.
 NB on a previous version of Opencomputers, there was a bug where wifi cards wouldn't be able to communicate between computers inside a rack so if you use that solution, make sure to get the last version of the mod.
 
 ## Software:
-* from the https://github.com/schloops1/wincraft page (this one) click "clone or download" then click "download zip".
-* extract all the files (the content of wincraft-master) into the home directory of your Opencomputer's server and client(s) hard drives
-* delete the doc directories if you need space
-* if you are running on a 1.7.10 version of minecraft, you need to set the variable higherThan_1_7_10 (contained in the settings.json file of the server) to false.
-* modify the .shrc file (should have extracted directly into home or you chose the wrong spot) of your server and client(s). Server .shrc should contain "srv" (no quotes) and client "client" (no quotes). That way, the computers will launch wincraft at boot.
+* click on "releases" (up there) and choose the last release.
+* extract all the files into the home directory of your Opencomputer's server and client(s) hard drives
+* if you are running on a 1.7.10 version of minecraft, you need to set the variable higherThan_1_7_10 (contained in the /home/wincraft/server/settings.json file of the server) to false.
+* modify the .shrc file (should have extracted directly into home or you chose the wrong spot) of your server and client(s). Server .shrc should contain "srv" (no quotes) and the client one "client" (no quotes). That way, the computers will launch wincraft at boot.
 
 # Warning:
 This is for private networks. It is not suited for public networks where you can't trust all users as it certainly could be abused to crash the server. It is possible to crash the client but no data loss should occur so you can simply restart it. The server can be crashed with variable shenanigans but equally, no data loss should occur. I'll add additional security to counter that.
