@@ -227,12 +227,20 @@ local saveOrderExecFile = function(orderName)
     elseif v["type"] == "trigVar" then
       o = o.." event.push('trigVar', '"..v.name.."'); "
 
-    elseif v["type"] == "inpVar" then
+    elseif v["type"] == "inpVar" then--specialise for vars ideally
       o = o.." while true do "
       o = o.."  eventType,varName = event.pull(); "
       o = o.."  if eventType == 'trigVar' then "
       o = o.."   if varName == '"..v.name.."' then break end "
       o = o.."  end "
+      o = o.." end "
+    elseif v["type"] == "ifV_A" then
+      o = o.." if WCServer.getVarValue('"..v.name.."') == "..tostring(v.is).." then "
+      o = o.."  WCServer.eAlias(_, _, _, _, _, _, '"..v.alias.."',"..v['force'].."); " 
+      o = o.." end "
+    elseif v["type"] == "ifV_O" then
+      o = o.." if WCServer.getVarValue('"..v.name.."') == "..tostring(v.is).." then "
+      o = o.." WCServer.eOrder(_, _, _, _, _, _, '"..v.order.."', 'offOn', true); "
       o = o.." end "
 		end
 	end
@@ -445,6 +453,7 @@ local uOrder = function(eventType,dest,src,aport,strength,order, oldOrderName, n
 	dataOrders[newOrderName] = json.decode(actualOrder)
 	if oldOrderName ~= newOrderName then dataOrders[oldOrderName] = nil	end
 	saveJsonData("dataOrders.json", dataOrders)
+	print("oldOrderName"..oldOrderName)
 	removeOrder(oldOrderName)
 	saveOrderExecFile(newOrderName)
 	package.loaded[newOrderName] = nil

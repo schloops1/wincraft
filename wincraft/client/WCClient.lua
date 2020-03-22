@@ -268,6 +268,51 @@ end
 
 -- ************************************************************************************************************************
 
+----probably going to get deleted cause... STUPID
+--WCClient.addSyncSwitchArray = function(block, side, colorStart, colorEnd, name, activeColor, passiveColor, pipeColor)
+--  if activeColor == nil then activeColor = 0x66DB80 end
+--  if passiveColor == nil then passiveColor = 0x1D1D1D end
+--  if pipeColor == nil then pipeColor = 0xEEEEEE end
+--
+--  local amount = colors[colorStart] - colors[colorEnd]
+--  if colorStart == colorEnd then amount = amount + 1 else amount = amount + 2 end
+--  local space; local disp
+--  if amount > 8 then space = 1 else space = 2 end
+--
+--  local switches = {}
+--  local i = 1
+--  for aColor=colors[colorStart],colors[colorEnd] do
+--    switches[i] = WCClient.addSyncSwitchNoLabel(block, side, aColor, name..aColor, activeColor, passiveColor, pipeColor)
+--    --disp = i * space
+--    switches[i].x = i * space--space is incorrect
+--    i = i + 1
+--  end
+--
+--  return switches
+--end
+
+WCClient.addSyncRectangleArray = function(block, side, color, colorEnd, name, activeColor, passiveColor)
+  if colorEnd < color then return {} end
+  local amount = colorEnd - color + 1
+  --if color == colorEnd then amount = amount + 1 else amount = amount + 2 end
+  
+  local space; local disp
+  if amount > 8 then space = 1 else space = 2 end
+
+  local switches = {}
+  local i = 1
+  for aColor = color, colorEnd do
+    switches[i] = WCClient.addSyncRectangle(block, side, aColor, name, activeColor, passiveColor)
+    --disp = i * space
+    switches[i].x = i * space--space is incorrect
+    i = i + 1
+  end
+
+  return switches
+--local aa = {}
+--return aa
+end
+
 WCClient.addSyncRectangle = function(block, side, color, name, activeColor, passiveColor)
 --WCClient.addSyncRectangle = function(block, side, color, name)
 	if activeColor == nil then activeColor = 0x33FF80 end
@@ -379,13 +424,13 @@ listenToWire = function(control, windowsName, block, side, color)
 end
 
 WCClient.addSyncSwitchNoLabel = function(block, side, color, name, activeColor, passiveColor, pipeColor)
-    if activeColor == nil then activeColor = 0x66DB80 end
-    if passiveColor == nil then passiveColor = 0x1D1D1D end
-    if pipeColor == nil then pipeColor = 0xEEEEEE end
+  if activeColor == nil then activeColor = 0x66DB80 end
+  if passiveColor == nil then passiveColor = 0x1D1D1D end
+  if pipeColor == nil then pipeColor = 0xEEEEEE end
     
-    local offOn = getOffOn(block, side, color)
-    local switch = WCClient.GUI.switch(1, 1, 11, activeColor, passiveColor, pipeColor, offOn)--0x999999, 
-    switch.onStateChanged = function() swithValue(block, side, color) end
+  local offOn = getOffOn(block, side, color)
+  local switch = WCClient.GUI.switch(1, 1, 11, activeColor, passiveColor, pipeColor, offOn)--0x999999, 
+  switch.onStateChanged = function() swithValue(block, side, color) end
 	listenToWire(switch, name, block, side, color)
 	return switch
 end

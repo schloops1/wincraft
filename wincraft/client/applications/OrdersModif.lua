@@ -32,6 +32,7 @@ local orderNameField
 local varValueField
 local varModField
 local varNameField
+local varTrueFalseField
       
 local orderNameToBeSelected = nil
 
@@ -158,6 +159,15 @@ insertOrderItem = function()
     orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
   elseif orderItem["type"] == "inpVar" then
     orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+  elseif orderItem["type"] == "ifV_A" then
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+    if varTrueFalseField.selectedItem == 1 then orderItem["is"] = false else orderItem["is"] = true end
+    orderItem["alias"] = aliasField:getItem(aliasField.selectedItem).text
+    orderItem["force"] = tonumber(forceField.text)
+  elseif orderItem["type"] == "ifV_O" then
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+    if varTrueFalseField.selectedItem == 1 then orderItem["is"] = false else orderItem["is"] = true end
+    orderItem["order"] = orderNameField:getItem(orderNameField.selectedItem).text  
 	end
 	local orders = client.dataOrders[oldOrderName.text].orders
 	for k, v in ipairs(orders) do
@@ -170,9 +180,14 @@ end
 
 updateOrderItem = function()
 	if orderItemList:count() == 0 then return end
-	if client.dataOrders[oldOrderName.text].offOn == true then return end
+	if client.dataOrders[oldOrderName.text].offOn == true then return end--might change?
 	local id = orderItemList.selectedItem
 	local orderItem = client.dataOrders[oldOrderName.text].orders[id]
+	
+	--orderItem = {}
+	--client.dataOrders[oldOrderName.text].orders[id] = orderItem 
+	--orderItem.id = id
+		
 	orderItem["type"] = typeField:getItem(typeField.selectedItem).text
 	if orderItem["type"] == "output" or orderItem["type"] == "input" or orderItem["type"] == "cleanOut" then
 		if tonumber(forceField.text) == nil then return end
@@ -217,6 +232,15 @@ updateOrderItem = function()
     orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
   elseif orderItem["type"] == "inpVar" then
     orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+  elseif orderItem["type"] == "ifV_A" then
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+		if varTrueFalseField.selectedItem == 1 then orderItem["is"] = false else orderItem["is"] = true end
+    orderItem["alias"] = aliasField:getItem(aliasField.selectedItem).text
+		orderItem["force"] = tonumber(forceField.text)
+  elseif orderItem["type"] == "ifV_O" then
+    orderItem["name"] = varNameField:getItem(varNameField.selectedItem).text
+		if varTrueFalseField.selectedItem == 1 then orderItem["is"] = false else orderItem["is"] = true end
+    orderItem["order"] = orderNameField:getItem(orderNameField.selectedItem).text
 	end
 	client.updateOrder("", orderName.text, client.dataOrders[orderName.text])
 end
@@ -282,6 +306,10 @@ displayOrderHudAndItems = function(name)
       astring = astring.." TV "..dmp.okv(v.name) 
     elseif v["type"] == "inpVar" then  
       astring = astring.." IV "..dmp.okv(v.name) 
+    elseif v["type"] == "ifV_A" then  
+      astring = astring.." ifVA "..dmp.okv(v.name).." "..tostring(v.is).." "..v.alias.." "..tostring(v.force)
+    elseif v["type"] == "ifV_O" then  
+      astring = astring.." ifVO "..dmp.okv(v.name).." "..tostring(v.is).." "..v.order
 		end
 		orderItemList:addItem(astring).onTouch = cleanFields
 	end
@@ -317,6 +345,9 @@ displayOrderItemCRUD = function(id, action, typeValue, varName)
 	typeField:addItem("execVOr").onTouch = function() displayOrderItemCRUD(id, action, "execVOr") end
 	typeField:addItem("trigVar").onTouch = function() displayOrderItemCRUD(id, action, "trigVar") end
 	typeField:addItem("inpVar").onTouch = function() displayOrderItemCRUD(id, action, "inpVar") end
+  
+  typeField:addItem("ifV_A").onTouch = function() displayOrderItemCRUD(id, action, "ifV_A") end
+  typeField:addItem("ifV_O").onTouch = function() displayOrderItemCRUD(id, action, "ifV_O") end
 
 	if (order ~= nil and order["type"] == "output") or (action ~= nil and action == "ins" and typeValue == nil) or (typeValue ~= nil and typeValue == "output") then 
 		typeField.selectedItem = 1
@@ -346,6 +377,10 @@ displayOrderItemCRUD = function(id, action, typeValue, varName)
     typeField.selectedItem = 13
   elseif (order ~= nil and order["type"] == "inpVar") or (typeValue ~= nil and typeValue == "inpVar") then 
     typeField.selectedItem = 14
+  elseif (order ~= nil and order["type"] == "ifV_A") or (typeValue ~= nil and typeValue == "ifV_A") then 
+    typeField.selectedItem = 15
+  elseif (order ~= nil and order["type"] == "ifV_O") or (typeValue ~= nil and typeValue == "ifV_O") then 
+    typeField.selectedItem = 16
 	end
 	
 	if typeField.selectedItem == 1 or typeField.selectedItem == 4 or typeField.selectedItem == 7 then --output, input, cleanOut
@@ -525,6 +560,66 @@ displayOrderItemCRUD = function(id, action, typeValue, varName)
     end
     if i == 0 then return end
     varNameField.selectedItem = iSelected  
+
+  elseif typeField.selectedItem == 15 then --ifV_A
+    varNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    local i = 0; iSelected = 1
+    for k, v in pairs (client.dataVarsList) do
+      if not client.dataVarsList[k].node and client.dataVarsList[k]["type"] == "Boolean" then
+        i = i + 1
+        varNameField:addItem(k)--.onTouch = function() displayOrderItemCRUD(id, action, "trigVar", k) end
+        if (order ~= nil and order.name == k) or (varName ~= nil and varName == k) then iSelected = i end
+      end
+    end
+    if i == 0 then return end
+    varNameField.selectedItem = iSelected  
+    
+    varTrueFalseField = containerFields:addChild(client.GUI.comboBox(37, 2, 8, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    varTrueFalseField:addItem("false")
+    varTrueFalseField:addItem("true")
+    if (order ~= nil and order.is == true) then varTrueFalseField.selectedItem = 2 else varTrueFalseField.selectedItem = 1 end
+
+    local listAliases = {}
+    local aliasNode = require "AliasNode"   
+    aliasNode.getAllAliases(client.dataAliases, listAliases)
+    aliasField = containerFields:addChild(client.GUI.comboBox(46, 2, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    local iiSelected = 1
+    for k, v in ipairs(listAliases) do
+      aliasField:addItem(v)
+      if order ~= nil and v == order.alias then iiSelected = k end
+    end
+    aliasField.selectedItem = iiSelected
+
+    forceField = containerFields:addChild(client.GUI.input(48, 3, 6, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", ""))
+    if order ~= nil then forceField.text = order.force end
+    
+  elseif typeField.selectedItem == 16 then --ifV_O
+    varNameField = containerFields:addChild(client.GUI.comboBox(20, 2, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    local i = 0; iSelected = 1
+    for k, v in pairs (client.dataVarsList) do
+      if not client.dataVarsList[k].node and client.dataVarsList[k]["type"] == "Boolean" then
+        i = i + 1
+        varNameField:addItem(k)--.onTouch = function() displayOrderItemCRUD(id, action, "trigVar", k) end
+        if (order ~= nil and order.name == k) or (varName ~= nil and varName == k) then iSelected = i end
+      end
+    end
+    if i == 0 then return end
+    varNameField.selectedItem = iSelected  
+    
+    varTrueFalseField = containerFields:addChild(client.GUI.comboBox(37, 2, 8, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    varTrueFalseField:addItem("false")
+    varTrueFalseField:addItem("true")
+    if (order ~= nil and order.is == true) then varTrueFalseField.selectedItem = 2 else varTrueFalseField.selectedItem = 1 end
+    
+    orderNameField = containerFields:addChild(client.GUI.comboBox(46, 2, 16, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    local tkeys = {}; for k in pairs(client.dataOrders) do table.insert(tkeys, k) end; table.sort(tkeys)
+    local i = 1; local iSelected = 0
+    for _, k in ipairs (tkeys) do
+      orderNameField:addItem(k)
+      if order ~= nil and k == order.order then iSelected = i end
+      i = i + 1
+    end
+    if iSelected ~= 0 then orderNameField.selectedItem = iSelected else orderNameField.selectedItem = 1 end
 	end
 	
 	displayOrderCRUDCommands(action)

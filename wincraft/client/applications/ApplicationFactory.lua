@@ -28,6 +28,7 @@ local idField
 local blockField
 local sideField
 local colorField
+local colorEndField
 local forceField
 local timeField
 local aliasField
@@ -138,6 +139,13 @@ createAppliFile = function()
 			astring = astring.."local ctrlb"..k.." = client.addSynchVarTxtButton('"..appli.name.."', '"..v.var.."', ctrl"..k..", "..appli.color5..", "..appli.color6..", "..appli.color3..", "..appli.color4.."); "
 			astring = astring.."ctrlb"..k..".y = "..k*appli.interval.."; ctrlb"..k..".x = "..(xCtrl + 18).."; "
 			astring = astring.."container:addChild(ctrlb"..k.."); "	
+		elseif v["type"] == "disMul" then
+      astring = astring.."container:addChild(client.GUI.text(2, "..k * appli.interval..", "..appli.color2..", '"..v.text.."')); "
+		  astring = astring.."local switches = client.addSyncRectangleArray('"..v.block.. "', "..v.side..", "..v.color..", "..v.colorEnd..", '"..appli.name.."', "..appli.color2..", "..appli.color4..") "
+      astring = astring.."for i, switch in ipairs(switches) do "
+      astring = astring.."switches[i].y = "..k*appli.interval.."; switches[i].x = switches[i].x - 1 + "..xCtrl.." ; "
+      astring = astring.."container:addChild(switches[i]); "  
+      astring = astring.."end "
 		end
 	end
 	astring = astring.."return window end ".."return "..appli.name
@@ -241,7 +249,13 @@ insertAppliItem = function()
 		
 	elseif appliItem["type"] == "updVar" then
 		appliItem["var"] = varField:getItem(varField.selectedItem).text
-		
+	
+	elseif appliItem["type"] == "disMul" then
+    appliItem["block"] = blockField:getItem(blockField.selectedItem).text
+    appliItem["side"] = sideField.selectedItem - 1
+    appliItem["color"] = colorField.selectedItem - 1
+    appliItem["colorEnd"] = colorEndField.selectedItem - 1
+		appliItem["text"] = outputNameField.text
 	end
 
 	local items = appli.items
@@ -287,6 +301,13 @@ updateAppliItem = function()
 	
 	elseif appliItem["type"] == "updVar" then
 		appliItem["var"] = varField:getItem(varField.selectedItem).text
+		
+	elseif appliItem["type"] == "disMul" then
+		appliItem["block"] = blockField:getItem(blockField.selectedItem).text
+    appliItem["side"] = sideField.selectedItem - 1
+    appliItem["color"] = colorField.selectedItem - 1
+    appliItem["colorEnd"] = colorEndField.selectedItem - 1
+    appliItem["text"] = outputNameField.text		
 	end
 	
 	saveData()
@@ -340,6 +361,7 @@ displayAppliItemCRUD = function(id, action, typeValue)
 	typeField:addItem("nothing").onTouch = function() displayAppliItemCRUD(id, action, "nothing") end
 	typeField:addItem("variable").onTouch = function() displayAppliItemCRUD(id, action, "variable") end
 	typeField:addItem("updVar").onTouch = function() displayAppliItemCRUD(id, action, "updVar") end
+	typeField:addItem("disMul").onTouch = function() displayAppliItemCRUD(id, action, "disMul") end
 
 	if (item ~= nil and item["type"] == "output") or (action ~= nil and action == "ins" and typeValue == nil) or (typeValue ~= nil and typeValue == "output") then 
 		typeField.selectedItem = 1
@@ -355,6 +377,8 @@ displayAppliItemCRUD = function(id, action, typeValue)
 		typeField.selectedItem = 6	
 	elseif (item ~= nil and item["type"] == "updVar") or (typeValue ~= nil and typeValue == "updVar") then 
 		typeField.selectedItem = 7
+	elseif (item ~= nil and item["type"] == "disMul") or (typeValue ~= nil and typeValue == "disMul") then 
+		typeField.selectedItem = 8
 	end
 	
 	if typeField.selectedItem == 1 or typeField.selectedItem == 4 then --output, display
@@ -426,10 +450,46 @@ displayAppliItemCRUD = function(id, action, typeValue)
   			ii = ii + 1
 		end
 		varField.selectedItem = iiSelected
+  elseif typeField.selectedItem == 8 then --disMul
+    blockField = containerFields:addChild(client.GUI.comboBox(20, 2, 12, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    local ii = 1
+    local iiSelected
+    for k, v in pairs (client.data) do
+      blockField:addItem(k)
+      if item ~= nil and k == item.block then iiSelected = ii end
+      ii = ii + 1
+    end
+    if iiSelected == nil then iiSelected = 1 end
+    blockField.selectedItem = iiSelected
+
+    sideField = containerFields:addChild(client.GUI.comboBox(33, 2, 10, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    for i = 0, 5 do
+      sideField:addItem(sides[i])
+    end
+    if item ~= nil then sideField.selectedItem = item.side + 1 end
+
+    colorField = containerFields:addChild(client.GUI.comboBox(44, 2, 9, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    for i = 0, 15 do
+      colorField:addItem(colors[i])
+    end
+    if item ~= nil then colorField.selectedItem = item.color + 1 end
+    
+    colorEndField = containerFields:addChild(client.GUI.comboBox(54, 2, 9, 1, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+    for i = 0, 15 do
+      colorEndField:addItem(colors[i])
+    end
+    if item ~= nil then colorEndField.selectedItem = item.colorEnd + 1 end    
+
+    containerFields:addChild(client.GUI.text(20, 3, 0xFFFFFF, "Text:"))
+    outputNameField = containerFields:addChild(client.GUI.input(28, 3, 16, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", ""))
+    if item ~= nil then outputNameField.text = item.text end
+    
 	end
 	
 	displayAppliCRUDCommands(action)
 	client.application:draw()	
+	
+	
 end
 
 local appliSelected = function()
@@ -464,6 +524,8 @@ local appliSelected = function()
 			astring = astring.." V "..v.var	
 		elseif v["type"] == "updVar" then
 			astring = astring.." UV "..v.var	
+		elseif v["type"] == "disMul" then
+			astring = astring.." DisMul "..v.block:sub(1, 6).." "..sides[v.side].." "..colors[v.color].." "..colors[v.colorEnd]
 		end			
 	
 		appliItemList:addItem(astring).onTouch = cleanCRUDFields
