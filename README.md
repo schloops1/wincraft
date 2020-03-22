@@ -65,8 +65,8 @@ Orders contain order commands. Executing an order will create a thread on the se
 * cleanOut: clean commands are executed at the end of ther list of commands and if/when a command is killed.
 * cleanOAl: same as cleanOut but uses an alias
 * cleanW: same as wait but executed at the end or when an order is killed
-* ifV_A: if a boolean variable is in the specified state then an Alias will be set to the specified state
-* ifV_O: if a boolean variable is in the specified state then an order will be executed
+* ifV_A: if a boolean variable is in the specified state then a specified Alias will be set to the specified state
+* ifV_O: if a boolean variable is in the specified state then a specified order will be executed
 
 ### Type of order commands linked to variables:
 They will make more sense after reading the doc on the variables window
