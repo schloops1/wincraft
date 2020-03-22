@@ -1,6 +1,6 @@
 # Wincraft
 
-Poorly named, Wincraft is software to control the state of wires in MC and create windows to manipulate those states without requiring any programmation knowledge. 
+Poorly named, Wincraft is software to control the state of wires in Minecraft and create windows to manipulate those states without requiring any programmation knowledge. 
 
 ![alt text](./doc/welcome.png "Welcome Screen")
 
@@ -13,7 +13,7 @@ Poorly named, Wincraft is software to control the state of wires in MC and creat
 ## Architecture:
 * one server that controls and reports the state of the wires
 * one or more clients displaying data and allowing users to interact with the server
-* transparently uses lan or wi-fi
+* transparently uses lan and/or wi-fi
 
 ## Requires:
 * Opencomputers 1.7.10 up to 1.12.2
@@ -63,19 +63,21 @@ Orders contain order commands. Executing an order will create a thread on the se
 * execOrder: executes the specified order
 * killOrder: ends the specified order
 * cleanOut: clean commands are executed at the end of ther list of commands and if/when a command is killed.
-* cleanOAl: same as cleanoput but uses an alias
+* cleanOAl: same as cleanOut but uses an alias
 * cleanW: same as wait but executed at the end or when an order is killed
+* ifV_A: if a boolean variable is in the specified state then an Alias will be set to the specified state
+* ifV_O: if a boolean variable is in the specified state then an order will be executed
 
 ### Type of order commands linked to variables:
 They will make more sense after reading the doc on the variables window
 * varSet: sets a variable. A number can be set, incremented and decremented by a value. Strings, booleans, alias and order types can be set depending on their type. 
-* execVAl: equivalent to outputAlias but to the alias the specified variables equals to
-* execVOr: equivalent to execOrder but to the order the specified variables equals to
+* execVAl: equivalent to outputAlias but to the alias the specified variable equals to
+* execVOr: equivalent to execOrder but to the order the specified variable equals to
 * inpVar: equivalent to input but listens for a change of value for the specified variable
 * trigVar: triggers any inpVar listening for the specified variable
 
 ## Orders List screen:
-Lists all recorded orders, displays their state (running or not) and allows starting and killing them. NB, they end by themselves when they executed all their commands.
+Lists all recorded orders, displays their state (running or not) and allows starting and killing them. NB, they end by themselves when they have executed all their commands.
 
 ![alt text](./doc/orders/OrdersList.png "Orders List Screen")
 
@@ -95,7 +97,7 @@ Variables can be created and their value set from this window. They are organize
 * name
 * node or not
 * type
-* save: data change from this window is always saved but not forcefully from other sources. This tells the program if the variable value needs to be saved on hard drive when it is saved from other sources (orders and custom windows).
+* save: data change from this window is always saved but not forcefully if changed by other ways. This tells the program if the variable value needs to be saved on hard drive when it is saved from other ways (orders and custom windows).
 * value. What value can be contained will depend on the type
 
 Caution: variables can make the program crash if pointing towards aliases or orders that don't exist anymore. I need to protect against that but haven't yet.
@@ -115,8 +117,9 @@ Then, you add the controls you want to see appear.
 * nothing: adds a vertical space
 * variable: displays the value of a variable
 * updVar: displays and allow modifying the value of a variable
+* disMul: displays the state of wires of a block/side belonging to the specified range of colors
 
-You can also change the colors if you wish:
+This screen enables the changing of the colors of the produced application.
 
 ![alt text](./doc/appliFactory/palette.png "Palette Screen")
 
@@ -124,16 +127,16 @@ This will result in, for example:
 
 ![alt text](./doc/appliFactory/appliBase.png "AppliBase Screen")
 
-You can create as many of such as you wish.
+You can create as many custom applications as you wish.
 
-NB1: custom windows won't react properly if you have 2 controls dealing with the same wire and only one wire
-NB2: it's is easy to crash the application by creating custom applications that use an order, alias or variable that you then rename or delete.
+NB1: custom windows won't react properly if you have 2 controls dealing with the same wire in the same application. Alias nodes can bypass that limitation.
+NB2: it's is easy to crash wincraft by creating custom applications that use an order, alias or variable that you then rename or delete.
 
 # Installation
 
 ## Hardware
 You will need at minimum a server and one client to run wincraft.
-Either have the server and it's clients on a lan or equip them all with a wifi network card. Mixing can work too.
+Either have the server and it's client(s) on a lan or equip them all with a wifi network card. Mixing can work too.
 You can locate all the computers inside a server rack if you want or not. 
 NB on a previous version of Opencomputers, there was a bug where wifi cards wouldn't be able to communicate between computers inside a rack so if you use that solution, make sure to get the last version of the mod.
 
@@ -144,10 +147,10 @@ NB on a previous version of Opencomputers, there was a bug where wifi cards woul
 * modify the .shrc file (should have extracted directly into home or you chose the wrong spot) of your server and client(s). Server .shrc should contain "srv" (no quotes) and the client one "client" (no quotes). That way, the computers will launch wincraft at boot.
 
 # Warning:
-This is for private networks. It is not suited for public networks where you can't trust all users as it certainly could be abused to crash the server. It is possible to crash the client but no data loss should occur so you can simply restart it. The server can be crashed with variable shenanigans but equally, no data loss should occur. I'll add additional security to counter that.
-Anyway, it should be perfectly useable as it currently is.
+This is for private networks. It is not suited for public networks where you can't trust all users as it certainly could be abused to crash the server. It is possible to crash the wincraft client but no data loss should occur so you can simply restart it. The wincraft server can be crashed with variable shenanigans but equally, no data loss should occur. I'll add additional security to counter that.
+Anyway, it's perfectly useable as it currently is in friendly singleplayer/multiplayer environments.
 * srv -enter or client-enter to launch the programs manually
 
 If you want some errors to display on the screen of the client, modify client.lua so that "local safe = true" becomes "local safe = false" .
 Client and server have a setting.json file where you can set a debug variable to true if you wish for loging to be written to log.txt. 
-They also contain the variable port.
+They also contain the variable port you can use if you want to set a different port or have multiple wincraft separated networks running together.
