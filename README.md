@@ -65,8 +65,6 @@ Orders contain order commands. Executing an order will create a thread on the se
 * cleanOut: clean commands are executed at the end of ther list of commands and if/when a command is killed.
 * cleanOAl: same as cleanOut but uses an alias
 * cleanW: same as wait but executed at the end or when an order is killed
-* ifV_A: if a boolean variable is in the specified state then a specified Alias will be set to the specified state
-* ifV_O: if a boolean variable is in the specified state then a specified order will be executed
 
 ### Type of order commands linked to variables:
 They will make more sense after reading the doc on the variables window
@@ -75,6 +73,8 @@ They will make more sense after reading the doc on the variables window
 * execVOr: equivalent to execOrder but to the order the specified variable equals to
 * inpVar: equivalent to input but listens for a change of value for the specified variable
 * trigVar: triggers any inpVar listening for the specified variable
+* ifV_A: if a boolean variable is in the specified state then a specified Alias will be set to the specified state
+* ifV_O: if a boolean variable is in the specified state then a specified order will be executed
 
 ## Orders List screen:
 Lists all recorded orders, displays their state (running or not) and allows starting and killing them. NB, they end by themselves when they have executed all their commands.
