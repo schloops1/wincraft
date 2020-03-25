@@ -138,7 +138,7 @@ You can create as many custom applications as you wish.
 NB1: custom windows won't react properly if you have 2 controls dealing with the same wire in the same application. Alias nodes can bypass that limitation.
 NB2: it's is easy to crash wincraft by creating custom applications that use an order, alias or variable that you then rename or delete.
 
-## documentation and about screens:
+## Documentation and about screens:
 Those are to be found under the Help menu.
 
 # Installation
