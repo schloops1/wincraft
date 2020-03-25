@@ -9,6 +9,7 @@ Poorly named, Wincraft is software to control the state of wires in Minecraft an
 * advanced control and automation features
 * replaces programming by intuitive screens
 * data is saved automatically
+* License is MIT
 
 ## Architecture:
 * one server that controls and reports the state of the wires
@@ -154,11 +155,20 @@ NB on a previous version of Opencomputers, there was a bug where wifi cards woul
 * if you are running on a 1.7.10 version of minecraft, you need to set the variable higherThan_1_7_10 (contained in the /home/wincraft/server/settings.json file of the server) to false.
 * modify the .shrc file (should have extracted directly into home or you chose the wrong spot) of your server and client(s). Server .shrc should contain "srv" (no quotes) and the client one "client" (no quotes). That way, the computers will launch wincraft at boot.
 
+If you want some errors to display on the screen of the client, modify client.lua so that "local safe = true" becomes "local safe = false" .
+Client and server have a setting.json file where you can set a debug variable to true if you wish for loging to be written to log.txt. 
+They also contain the variable port you can use if you want to set a different port or have multiple wincraft separated networks running together.
+
 # Warning:
 This is for private networks. It is not suited for public networks where you can't trust all users as it certainly could be abused to crash the server. It is possible to crash the wincraft client but no data loss should occur so you can simply restart it. The wincraft server can be crashed with variable shenanigans but equally, no data loss should occur. I'll add additional security to counter that.
 Anyway, it's perfectly useable as it currently is in friendly singleplayer/multiplayer environments.
 * srv -enter or client-enter to launch the programs manually
 
-If you want some errors to display on the screen of the client, modify client.lua so that "local safe = true" becomes "local safe = false" .
-Client and server have a setting.json file where you can set a debug variable to true if you wish for loging to be written to log.txt. 
-They also contain the variable port you can use if you want to set a different port or have multiple wincraft separated networks running together.
+## Third party libraries used:
+* https://github.com/IgorTimofeev/GUI
+* https://github.com/rxi/json.lua
+
+## Thanks to:
+* OpenComputers's developers
+* IgorTimofeev and rxi for their library
+* anybody that uses this program
