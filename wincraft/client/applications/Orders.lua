@@ -1,26 +1,24 @@
- local Orders = {}
- local colors = require "colors"
- local sides = require "sides"
+local Orders = {}
  
- local client
- local name
+local client
+local name
  
- function Orders:set(aname)
+function Orders:set(aname)
  	client = self; name = aname
- end
+end
   
- local memory = {}
+local memory = {}
  
- local layoutOrder
- local amountOrders
+local layoutOrder
+local amountOrders
  
- displayOrderLine = function(key)
+displayOrderLine = function(key)
  	layoutOrder:addChild(memory[key])
- end
+end
  
- local scrollSize = 16
+local scrollSize = 16
  
- displayOrders = function()
+displayOrders = function()
  	layoutOrder:removeChildren()
  	client.stopListeningToWindowOrders(name)
  	local i = 0	
@@ -38,9 +36,9 @@
  	amountOrders = i
  	client.scrollFromTo(0, amountOrders, scrollSize, layoutOrder, displayOrderLine)
  	client.application:draw()
- end
+end
  
- Orders.display = function()
+Orders.display = function()
  	local window = client.application:addChild(client.GUI.titledWindow(50, 22, 36, 20, name, true))
  	window.actionButtons.close.onTouch = function() client.closeWindow(name) end
  
@@ -61,10 +59,9 @@
  
  	local verticalScrollBar = layout:addChild(client.GUI.scrollBar(1, 1, 1, scrollSize, 0x444444, 0x888888, 1, 100, 1, 10, 1, true))
  	layout:setPosition(2, 1, verticalScrollBar)
- 	verticalScrollBar.onTouch = function() --client.GUI.alert("coucou "..verticalScrollBar.value);
- 			client.scrollFromTo(verticalScrollBar.value, amountOrders, scrollSize, layoutOrder, displayOrderLine)
- 		end
+ 	verticalScrollBar.onTouch = function() client.scrollFromTo(verticalScrollBar.value, amountOrders, scrollSize, layoutOrder, displayOrderLine) end
+ 	
  	return window
- end	
+end	
  	
 return Orders

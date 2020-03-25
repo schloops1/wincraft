@@ -623,12 +623,14 @@ local display = function()
 	table.sort(sorted, function(a,b) return a[2].order < b[2].order end)
 	
 	for k, v in ipairs(sorted) do
-	    contextMenu2:addItem(v[1]).onTouch = function() openWindow(v[1]) end
+	   if v[2].order < 1000 then contextMenu2:addItem(v[1]).onTouch = function() openWindow(v[1]) end end
 	    d.p("added window: "..k)
 	end
-	
-	local contextMenu3 = menu:addContextMenu("Locks")
-	contextMenu3:addItem("Unlock OrdersModif Window").onTouch = function() WCClient.lockWindow("OrdersModif", false) end
+
+	local contextMenu3 = menu:addContextMenu("Help")
+  for k, v in ipairs(sorted) do
+  	if v[2].order >= 1000 then  contextMenu3:addItem(v[1]).onTouch = function() openWindow(v[1]) end end
+  end
 
 	local contextMenu4 = menu:addContextMenu("Custom")
 	for k, v in pairs (customApplis) do	

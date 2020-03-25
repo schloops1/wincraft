@@ -3,37 +3,85 @@
 		"Generic": {
 			"opened": false,
 			"lockable": false,
-			"order": 1,
+			"order": 10,
+			"control": ""
+		},
+		"Aliases": {
+			"opened": false,
+			"lockable": false,
+			"order": 20,
 			"control": ""
 		},
 		"AliasesModif": {
 			"opened": false,
 			"lockable": false,
-			"order": 3,
+			"order": 30,
 			"control": ""
 		},
 		"VariablesModif": {
 			"opened": false,
 			"lockable": false,
-			"order": 4,
+			"order": 40,
 			"control": ""
 		},
 		"Orders": {
 			"opened": false,
 			"lockable": false,
-			"order": 5,
+			"order": 50,
 			"control": ""
 		},
 		"OrdersModif": {
 			"opened": false,
 			"lockable": false,
-			"order": 6,
+			"order": 60,
 			"control": ""
 		},
 		"ApplicationFactory": {
 			"opened": false,
 			"lockable": false,
-			"order": 7,
+			"order": 70,
+			"control": ""
+		},
+		"About": {
+			"opened": false,
+			"lockable": false,
+			"order": 1001,
+			"control": ""
+		},
+		"DocGeneral": {
+			"opened": false,
+			"lockable": false,
+			"order": 1010,
+			"control": ""
+		},
+		"DocGeneric": {
+			"opened": false,
+			"lockable": false,
+			"order": 1020,
+			"control": ""
+		},
+		"DocAliases": {
+			"opened": false,
+			"lockable": false,
+			"order": 1030,
+			"control": ""
+		},
+		"DocVariables": {
+			"opened": false,
+			"lockable": false,
+			"order": 1040,
+			"control": ""
+		},
+		"DocOrders": {
+			"opened": false,
+			"lockable": false,
+			"order": 1050,
+			"control": ""
+		},
+		"DocAppliFactory": {
+			"opened": false,
+			"lockable": false,
+			"order": 1060,
 			"control": ""
 		}
 	},
