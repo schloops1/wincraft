@@ -53,7 +53,7 @@ A node can contain nodes and leaves while a leaf references a specific wire.
 ## Alias List screen:
 Simple screen to display and modify the state of aliases.
 
-![alt text](./doc/alias/AliasListScreen.png "Alias List Screen")
+![alt text](./doc/alias/aliasListScreen.png "Alias List Screen")
 
 ## Orders screen:
 Orders contain order commands. Executing an order will create a thread on the server and then execute the order commands in their respective order. An order can be killed. Repeat will repeat all the commands the specified amount of times.
