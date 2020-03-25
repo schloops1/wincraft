@@ -50,6 +50,11 @@ A node can contain nodes and leaves while a leaf references a specific wire.
 * triplet of redstone block/side/wire
 * buttons to to turn the alias on or off. Displays the state of a leaf. A node will effect all the leaves contained
 
+## Alias List screen:
+Simple screen to display and modify the state of aliases.
+
+![alt text](./doc/alias/AliasList.png "Alias List Screen")
+
 ## Orders screen:
 Orders contain order commands. Executing an order will create a thread on the server and then execute the order commands in their respective order. An order can be killed. Repeat will repeat all the commands the specified amount of times.
 
@@ -97,7 +102,7 @@ Variables can be created and their value set from this window. They are organize
 * name
 * node or not
 * type
-* save: data change from this window is always saved but not forcefully if changed by other ways. This tells the program if the variable value needs to be saved on hard drive when it is saved from other ways (orders and custom windows).
+* save: variables whose data is changed though this window always have their changes saved on hard drive (permanent). But not forcefully if changed from elsewhere (order or custom application) for performances reason. This variable controls if a variables value change is always saved on hard drive.
 * value. What value can be contained will depend on the type
 
 Caution: variables can make the program crash if pointing towards aliases or orders that don't exist anymore. I need to protect against that but haven't yet.
@@ -131,6 +136,9 @@ You can create as many custom applications as you wish.
 
 NB1: custom windows won't react properly if you have 2 controls dealing with the same wire in the same application. Alias nodes can bypass that limitation.
 NB2: it's is easy to crash wincraft by creating custom applications that use an order, alias or variable that you then rename or delete.
+
+## documentation and about screens:
+Those are to be found under the Help menu.
 
 # Installation
 
