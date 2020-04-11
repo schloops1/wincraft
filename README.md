@@ -147,6 +147,7 @@ Those are to be found under the Help menu.
 You will need at minimum a server and one client to run wincraft.
 Either have the server and it's client(s) on a lan or equip them all with a wifi network card. Mixing can work too.
 You can locate all the computers inside a server rack if you want or not. 
+The server needs to have at least one [redstone block(s)](https://ocdoc.cil.li/block:redstone_io) connected
 NB on a previous version of Opencomputers, there was a bug where wifi cards wouldn't be able to communicate between computers inside a rack so if you use that solution, make sure to get the last version of the mod.
 
 ## Software:
@@ -157,6 +158,7 @@ NB on a previous version of Opencomputers, there was a bug where wifi cards woul
 
 ### Automated through OPPM
 * you need to have OPPM installed on the computer
+* oppm register schloops1/wincraft
 * oppm install wincraft
 
 ### Additional actions
