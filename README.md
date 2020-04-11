@@ -150,10 +150,19 @@ You can locate all the computers inside a server rack if you want or not.
 NB on a previous version of Opencomputers, there was a bug where wifi cards wouldn't be able to communicate between computers inside a rack so if you use that solution, make sure to get the last version of the mod.
 
 ## Software:
+
+### Manual
 * click on "releases" (up there) and choose the last release.
-* extract all the files into the home directory of your Opencomputer's server and client(s) hard drives
+* extract all files from /etc into /etc and files from /usr into /usr
+
+### Automated through OPPM
+* you need to have OPPM installed on the computer
+* oppm install wincraft
+
+### Additional actions
 * if you are running on a 1.7.10 version of minecraft, you need to set the variable higherThan_1_7_10 (contained in the /home/wincraft/server/settings.json file of the server) to false.
-* modify the .shrc file (should have extracted directly into home or you chose the wrong spot) of your server and client(s). Server .shrc should contain "srv" (no quotes) and the client one "client" (no quotes). That way, the computers will launch wincraft at boot.
+* edit server's /home/.shrc file and set it's content to: /usr/bin/wincraft/server/srv
+* edit all client's /home/.shrc file(s) and set it's (their) content to: /usr/bin/wincraft/client/client
 
 If you want some errors to display on the screen of the client, modify client.lua so that "local safe = true" becomes "local safe = false" .
 Client and server have a setting.json file where you can set a debug variable to true if you wish for loging to be written to log.txt. 
@@ -171,4 +180,5 @@ Anyway, it's perfectly useable as it currently is in friendly singleplayer/multi
 ## Thanks to:
 * OpenComputers's developers
 * IgorTimofeev and rxi for their library
+* Vexatos for his help with OPPM
 * anybody that uses this program
