@@ -9,7 +9,7 @@ function About:set(aname)
 end
 
 About.display = function()
-  local window = client.application:addChild(client.GUI.titledWindow(50, 22, 70, 15, name, true))
+  local window = client.application:addChild(client.GUI.titledWindow(50, 22, 70, 16, name, true))
   window.actionButtons.close.onTouch = function() client.closeWindow(name) end
   
   local textBox = window:addChild(client.GUI.textBox(2, 2, 68, 13, 0x1EEEEE, 0x2D2D2D, {}, 1, 1, 0))
@@ -26,6 +26,7 @@ About.display = function()
   table.insert(textBox.lines, "Special thanks to:")
   table.insert(textBox.lines, "* OpenComputers s developers")
   table.insert(textBox.lines, "* IgorTimofeev and rxi for their library")
+  table.insert(textBox.lines, "* Vexatos for OPPM")
   table.insert(textBox.lines, "* anybody that uses this program")
 
   return window
