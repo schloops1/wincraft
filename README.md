@@ -17,7 +17,7 @@ Poorly named, Wincraft is software to control the state of wires in Minecraft an
 * transparently uses lan and/or wi-fi
 
 ## Requires:
-* Opencomputers 1.7.10 up to 1.12.2
+* Minecraft 1.7.10 up to 1.12.2
 * Project Red or such wires
 
 ## Basics of signal:
